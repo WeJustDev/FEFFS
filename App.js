@@ -1,14 +1,28 @@
 import { StatusBar } from "expo-status-bar";
 import { createTamagui, TamaguiProvider } from "tamagui";
 
-import "./assets/src/main.css"
+// Import navigation router
+import Navigation from "./assets/pages/Navigation"; 
 
+// import .env variables
+import { NNAPPID, NNAPPTOKEN } from '@env';
+
+// import tailwindCSS
+import "./assets/src/main.css";
+
+// import Tamagui component 
 import defaultConfig from "@tamagui/config/v3";
-import Navigation from "./assets/pages/Navigation"; // Import du gestionnaire de navigation
-
 const config = createTamagui(defaultConfig);
 
+// import nativeNotify
+import registerNNPushToken from 'native-notify';
+
 export default function App() {
+
+  const appId = NNAPPID;
+  const appToken = NNAPPTOKEN;
+  registerNNPushToken(appId, appToken);
+
   return (
     <TamaguiProvider config={config}>
       <StatusBar style="auto" />
