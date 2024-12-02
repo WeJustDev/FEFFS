@@ -1,6 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import { Text, View } from "react-native";
 
+// import .env variables
+import { NNAPPID, NNAPPTOKEN } from '@env';
+
 // import tailwindCSS
 import "./assets/src/main.css";
 
