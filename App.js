@@ -1,6 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import { Text, View } from "react-native";
 
+// import .env variables
+import { NNAPPID, NNAPPTOKEN } from '@env';
+
 // import tailwindCSS
 import "./assets/src/main.css";
 
@@ -11,7 +14,15 @@ import { Button } from 'tamagui'
 
 const config = createTamagui(defaultConfig)
 
+// import nativeNotify
+import registerNNPushToken from 'native-notify';
+
 export default function App() {
+
+  const appId = NNAPPID;
+  const appToken = NNAPPTOKEN;
+  registerNNPushToken(appId, appToken);
+
   return (
     <TamaguiProvider config={config}>
       <View className='flex-1 justify-center items-center bg-red-600'>
