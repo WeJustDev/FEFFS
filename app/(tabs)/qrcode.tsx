@@ -1,6 +1,6 @@
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { Text, StyleSheet, Pressable, Image, View, TouchableOpacity } from "react-native";
+import { Text, StyleSheet, Pressable, View, SafeAreaView, Vibration, Linking } from "react-native";
 import { useState } from "react";
+import Overlay from "../../components/ui/Overlay";
 
 // import camera permissions
 import { useCameraPermissions } from "expo-camera";
@@ -10,47 +10,90 @@ import { CameraView, CameraType } from "expo-camera";
 export default function QrCode() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
-  const isPermissionGrandted = permission?.granted;
+  const isPermissionGranted = permission?.granted;
+
+  const [targetLink, setTargetLink] = useState<string | null>(null); 
 
   function toggleCameraFacing() {
-    setFacing(current => (current === 'back' ? 'front' : 'back'));
+    setFacing((current) => (current === "back" ? "front" : "back"));
+  }
+
+  function handleScan(data: any) {
+    if (!targetLink){
+      setTargetLink(data.data);
+      Vibration.vibrate();
+      console.log(data.data);
+    }
   }
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      {" "}
-      <Pressable disabled={!isPermissionGrandted}>
-        <Text
-          style={{ opacity: !isPermissionGrandted ? 0.5 : 1, color: "white" }}
-        >
-          Scan Code
-        </Text>
-        {isPermissionGrandted && (
-          <CameraView style={styles.camera} facing={facing}>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={toggleCameraFacing}
-              >
-                <Text style={styles.text}>Flip Camera</Text>
-              </TouchableOpacity>
+    <>
+      {targetLink && (
+        <View style={{width: "100%", padding: 10, backgroundColor: 'red', position: "absolute",}}>
+          <View style={[styles.notification, { zIndex: 20 }]}>
+            <View style={{display: "flex", flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", width: "100%", gap: 20}}>
+              <View style={{display: "flex", alignItems: "flex-start"}}>
+                <Text style={styles.message}>Scanned QR code:</Text>
+                {targetLink && (
+                  <Pressable onPress={() => {
+                  if (targetLink.startsWith('http://') || targetLink.startsWith('https://')) {
+                    Linking.openURL(targetLink);
+                  }
+                  }}>
+                  <Text style={[styles.message, { color: targetLink.startsWith('http://') || targetLink.startsWith('https://') ? 'blue' : 'black', textDecorationLine: targetLink.startsWith('http://') || targetLink.startsWith('https://') ? 'underline' : 'none' }]}>
+                    {targetLink}
+                  </Text>
+                  </Pressable>
+                )}
+              </View>
+              <Pressable onPress={() => setTargetLink(null)} android_ripple={{ color: 'gray' }}>
+                <Text style={styles.message}>✖</Text>
+              </Pressable>
             </View>
-          </CameraView>
-        )}
-      </Pressable>
-    </ParallaxScrollView>
+            <Pressable onPress={() => setTargetLink(null)} android_ripple={{ color: 'gray' }}>
+              <Text style={[styles.message, styles.button]}>Scan another QR Code</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+      {isPermissionGranted && (
+        <SafeAreaView style={StyleSheet.absoluteFillObject}>
+          <CameraView style={StyleSheet.absoluteFillObject} facing={facing}
+            onBarcodeScanned={handleScan}
+          />
+          <Overlay />
+        </SafeAreaView>
+      )}
+      {!isPermissionGranted && (
+        <View style={styles.container}>
+          <Text style={styles.message}>
+            Camera permission is required to scan QR codes.
+          </Text>
+          <Pressable onPress={requestPermission}>
+            <Text style={[styles.message, styles.button]}>Request permission</Text>
+          </Pressable>
+        </View>
+      )}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  notification: {
+    color: "gray",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    padding: 10,
+    backgroundColor: "white",
+    width: "95%",
+    borderRadius: 5,
+    left: 0,
+    marginTop: 50,
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
   container: {
     flex: 1,
     justifyContent: "center",
@@ -58,32 +101,16 @@ const styles = StyleSheet.create({
   message: {
     textAlign: "center",
     paddingBottom: 10,
-  },
-  camera: {
-    flex: 1,
-    height: 700,
-  },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    margin: 64,
+    color: "gray",
   },
   button: {
-    flex: 1,
-    alignSelf: "flex-end",
+    display: "flex",
+    justifyContent: "center",
     alignItems: "center",
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+    padding: 10,
+    backgroundColor: "#A1CEDC",
+    borderRadius: 5,
+    alignSelf: "center",
+    width: "auto",
+  }
 });
