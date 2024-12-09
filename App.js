@@ -1,24 +1,21 @@
-import { StatusBar } from "expo-status-bar";
-import { createTamagui, TamaguiProvider } from "tamagui";
+import { StatusBar } from 'expo-status-bar';
+import { createTamagui, TamaguiProvider } from 'tamagui';
+import { Slot, useRouter } from 'expo-router';
 
-// Import navigation router
-import Navigation from "./assets/pages/Navigation"; 
-
-// import .env variables
+// Importez vos variables d'environnement
 import { NNAPPID, NNAPPTOKEN } from '@env';
 
-// import tailwindCSS
-import "./assets/src/main.css";
+// Importez votre fichier CSS Tailwind
+import './assets/src/main.css';
 
-// import Tamagui component 
-import defaultConfig from "@tamagui/config/v3";
+// Importez la configuration Tamagui
+import defaultConfig from '@tamagui/config/v3';
 const config = createTamagui(defaultConfig);
 
-// import nativeNotify
+// Importez Native Notify
 import registerNNPushToken from 'native-notify';
 
 export default function App() {
-
   const appId = NNAPPID;
   const appToken = NNAPPTOKEN;
   registerNNPushToken(appId, appToken);
@@ -26,7 +23,7 @@ export default function App() {
   return (
     <TamaguiProvider config={config}>
       <StatusBar style="auto" />
-      <Navigation />
+      <Slot /> {/* Ce composant gère le rendu des routes */}
     </TamaguiProvider>
   );
 }
