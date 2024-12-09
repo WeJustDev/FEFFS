@@ -51,7 +51,7 @@ export default function Nav() {
             onPress={() => handlePress(link.name)}
             onPressIn={() => setVisibleTooltip(link.name)}
             onPressOut={() => setVisibleTooltip(null)}
-            className={`rounded-2xl p-2 px-2.5 m-2 ${
+            className={`rounded-2xl p-2.5 px-2.5 m-2 ${
               selectedLink === link.name ? 'bg-black text-white' : 'bg-white text-black'
             }`}
             accessibilityLabel={link.name}
