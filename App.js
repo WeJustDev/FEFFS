@@ -2,6 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import { createTamagui, TamaguiProvider } from 'tamagui';
 import { Slot, useRouter } from 'expo-router';
 
+// Import navigation router
+import Navigation from "./assets/pages/Navigation"; 
+
 // Importez vos variables d'environnement
 import { NNAPPID, NNAPPTOKEN } from '@env';
 
