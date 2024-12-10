@@ -23,6 +23,7 @@ export const Colors = {
     headerText: '#000000', // Noir pour le texte en mode clair
     dateTagBg: 'rgba(206, 90, 75, 0.1)', // Version plus claire du tag de date
     dateTagText: '#ce5a4b', // Conservé du thème sombre
+    button: '#d35446'
   },
   dark: {
     text: '#ECEDEE',
@@ -40,5 +41,6 @@ export const Colors = {
     headerText: '#FFFFFF', // Blanc pour le texte en mode sombre
     dateTagBg: 'rgba(206, 90, 75, 0.2)', // Version semi-transparente
     dateTagText: '#ce5a4b', // Conservé
+    button: '#d35446'
   },
 };
