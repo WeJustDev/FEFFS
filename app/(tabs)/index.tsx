@@ -1,65 +1,59 @@
-import { Image, StyleSheet, Vibration, View, Text, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import SignUpScreen from '@/components/SignUpForm';
+import LogoutButton from '@/components/LogoutButton';
+import DownloadProfileButton from '@/components/DownloadProfilButton';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
-export default function HomeScreen() {
+export default function Index() {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const [selectedLink, setSelectedLink] = useState("Accueil");
-  const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null);
+    const handleLogin = () => {
+      setIsLoggedIn(true);
+    };
 
-  interface Link {
-    name: string;
-    icon: string;
-  }
+    useEffect(() => {
+      const checkUser = async () => {
+        const storedName = await AsyncStorage.getItem('name');
+        const storedEmail = await AsyncStorage.getItem('email');
+        if (storedName && storedEmail) {
+          setName(storedName);
+          setEmail(storedEmail);
+        }
+      };
+      checkUser();
+    }, [isLoggedIn]);
 
-  const links: Link[] = [
-    { name: 'Accueil', icon: '<p>test</p>' },
-    { name: 'Programmation', icon: '<p>test</p>' },
-    { name: 'Billets', icon: '<p>test</p>' },
-  ];
-
-  const secondaryLinks: Link[] = [
-    { name: 'Mes billets', icon: '<p>test</p>'},
-    { name: 'QR Code', icon: '<p>test</p>'},
-  ];
-
-  const handlePress = (name: string): void => {
-    Vibration.vibrate(50); 
-    setSelectedLink(name);
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setName('');
+    setEmail('');
   };
 
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <View style={styles.titleContainer}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Accueil</Text>
-      </View>
-    </ParallaxScrollView>
-  );
-}
+  if (isLoggedIn) {
+    return (
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+        headerImage={
+          <Image
+            source={require('@/assets/images/partial-react-logo.png')}
+          />
+        }>
+        <View>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>Accueil</Text>
+          <Text style={{ fontSize: 16, color: '#fff' }}> - Bienvenue {name} !</Text>
+          <LogoutButton onLogout={handleLogout} />
+          <DownloadProfileButton name={name} email={email} onError={setError} />
+        </View>
+      </ParallaxScrollView>
+    );
+  }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+  return <SignUpScreen onLogin={handleLogin} />;
+}
