@@ -9,6 +9,7 @@ const tintColorDark = '#fff';
 export const Colors = {
   light: {
     text: '#11181C',
+    textsecondary: '#687076',
     background: '#f4f4f4', // Légèrement modifié pour le thème clair
     tint: tintColorLight,
     icon: '#687076',
@@ -25,6 +26,7 @@ export const Colors = {
   },
   dark: {
     text: '#ECEDEE',
+    textsecondary: '#9BA1A6',
     background: '#151718',
     tint: tintColorDark,
     icon: '#9BA1A6',

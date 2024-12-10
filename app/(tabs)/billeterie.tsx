@@ -31,8 +31,6 @@ const carouselItems = [
 export default function Billeterie() {
   const colorScheme = useColorScheme();
 
-  console.log(colorScheme);
-
   return (
     <ScrollView 
       style={{ 
