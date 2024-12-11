@@ -142,7 +142,6 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
             const contentType = userByEmail.headers.get('content-type');
             if (contentType && contentType.indexOf('application/json') !== -1) {
                 const userData = await userByEmail.json();
-                console.log(userData);
                 if (userData.success == true) {
                     await AsyncStorage.setItem('name', userData.user.lastname);
                     await AsyncStorage.setItem('email', email);
@@ -154,7 +153,6 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
                 }
             } else {
                 setError('Réponse du serveur invalide.');
-                console.log('Réponse du serveur invalide:', await userByEmail.text());
             }
         } catch (error) {
             setError(`Erreur lors de l\'enregistrement. ${error}`);
@@ -177,14 +175,11 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
 
             if (result.assets && result.assets.length > 0) {
                 const uri = result.assets[0].uri;
-                console.log('URI du fichier sélectionné :', uri);
 
                 const response = await fetch(uri);
                 const fileContent = await response.text();
-                console.log('Contenu du fichier :', fileContent);
 
                 const profile = JSON.parse(fileContent);
-                console.log('Profil importé :', profile);
                 if (profile.name && profile.email) {
                     setName(profile.name);
                     setEmail(profile.email);
@@ -198,11 +193,9 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
                     onLogin();
                 } else {
                     setError('Le fichier ne contient pas de données valides.');
-                    console.log('Données du profil invalides');
                 }
             } else {
                 setError('Aucun fichier sélectionné.');
-                console.log('Aucun fichier sélectionné.');
             }
         } catch (error) {
             setError('Erreur lors de l\'importation du profil.');
