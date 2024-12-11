@@ -12,28 +12,36 @@ export default function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [firstname, setFirstname] = useState('');
+  const [psw, setPsw] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-    const handleLogin = () => {
-      setIsLoggedIn(true);
-    };
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
 
-    useEffect(() => {
-      const checkUser = async () => {
-        const storedName = await AsyncStorage.getItem('name');
-        const storedEmail = await AsyncStorage.getItem('email');
-        if (storedName && storedEmail) {
-          setName(storedName);
-          setEmail(storedEmail);
-        }
-      };
-      checkUser();
-    }, [isLoggedIn]);
+  useEffect(() => {
+    const checkUser = async () => {
+      const storedName = await AsyncStorage.getItem('name');
+      const storedEmail = await AsyncStorage.getItem('email');
+      const storedFirstname = await AsyncStorage.getItem('firstname');
+      const storedPsw = await AsyncStorage.getItem('psw');
+      if (storedName && storedEmail && storedFirstname && storedPsw) {
+        setName(storedName);
+        setEmail(storedEmail);
+        setFirstname(storedFirstname);
+        setPsw(storedPsw);
+      }
+    };
+    checkUser();
+  }, [isLoggedIn]);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setName('');
     setEmail('');
+    setFirstname('');
+    setPsw('');
   };
 
   if (isLoggedIn) {
