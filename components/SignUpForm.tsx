@@ -40,12 +40,10 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
             const storedName = await AsyncStorage.getItem('name');
             const storedEmail = await AsyncStorage.getItem('email');
             const storedFirstname = await AsyncStorage.getItem('firstname');
-            const storedPsw = await AsyncStorage.getItem('psw');
-            if (storedName && storedEmail && storedFirstname && storedPsw) {
+            if (storedName && storedEmail && storedFirstname ) {
                 setName(storedName);
                 setEmail(storedEmail);
                 setFirstname(storedFirstname);
-                setPsw(storedPsw);
                 onLogin();
             }
         };
