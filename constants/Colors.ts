@@ -10,7 +10,7 @@ export const Colors = {
   light: {
     text: '#11181C',
     background: '#f4f4f4', // Légèrement modifié pour le thème clair
-    tint: tintColorLight,
+    tint: '#d1d1d1',
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
@@ -26,14 +26,14 @@ export const Colors = {
   dark: {
     text: '#ECEDEE',
     background: '#151718',
-    tint: tintColorDark,
+    tint: '#252525',
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
     
     // Couleurs spécifiques
     pageBg: '#0f0f10', // Noir très sombre
-    cardBg: '#e4e2d4', // Gardé identique pour un contraste cohérent
+    cardBg: 'rgba(36, 36, 36, 0.6)', // Gardé identique pour un contraste cohérent
     cardDarkBg: '#171717', // Noir légèrement plus clair
     headerText: '#FFFFFF', // Blanc pour le texte en mode sombre
     dateTagBg: 'rgba(206, 90, 75, 0.2)', // Version semi-transparente
