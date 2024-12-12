@@ -171,7 +171,6 @@ export default function Planning() {
           {prog[selectedDay] ? (
             sortEventsByStartAndEndTime(prog[selectedDay]).map(
               (event, index, array) => {
-                const nextEvent = array[index + 1];
                 const endTime = calculateEndTime(event.hour, event.duration);
                 const overlap = array.some((e, i) => i !== index && e.hour < endTime && calculateEndTime(e.hour, e.duration) > event.hour);
   
