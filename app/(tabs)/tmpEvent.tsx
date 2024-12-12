@@ -20,35 +20,27 @@ export default function TmpEvent() {
   });
 
   const handleAdd = async (eventId: string) => {
-    console.log("Add event to personnal calendar");
+    console.log("Add event to personnal calendar...");
     const userEmail = await AsyncStorage.getItem("email");
+    if (userEmail != null) {
+      // With userEmail, return userId
+      console.log("User email:", userEmail);
+      const userId = await fetch("https://feffs.elioooooo.fr/user/get/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userEmail,
+        }),
+      }).then(async (data) => {
+        const response = await data.json();
+        return response.userId;
+      });
 
-    const userId = await fetch("https://feffs.elioooooo.fr/user/get/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: userEmail,
-      }),
-    }).then((response) => response.json());
-
-    const userProgram = await fetch("https://feffs.elioooooo.fr/program/get/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: userId,
-      }),
-    });
-
-    if (userProgram.status === 200) {
-      const data = await userProgram.json();
-      setUserProgramId(data._id);
-    } else {
-      const newProgram = await fetch(
-        "https://feffs.elioooooo.fr/program/create/",
+      // With userId, return userProgramId
+      const userProgram = await fetch(
+        "https://feffs.elioooooo.fr/program/get/",
         {
           method: "POST",
           headers: {
@@ -59,35 +51,139 @@ export default function TmpEvent() {
           }),
         }
       );
+      console.log("User program status:", userProgram.status);
 
-      if (newProgram.status === 200) {
-        const data = await newProgram.json();
+      if (userProgram.status === 200) {
+        console.log("Program existant");
+        const data = await userProgram.json();
+        console.log("Program n°", data._id);
         setUserProgramId(data._id);
+      } else {
+        console.log("Program inexistant");
+        const newProgram = await fetch(
+          "https://feffs.elioooooo.fr/program/create/",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: userId,
+            }),
+          }
+        );
+
+        if (newProgram.status === 200) {
+          const data = await newProgram.json();
+          console.log("Création du program n°", data._id);
+          setUserProgramId(data._id);
+        }
       }
-    }
 
-    const event = await fetch(
-      `https://feffs.elioooooo.fr/event/get/${eventId}`
-    );
-    const eventData = await event.json();
+      console.log("Add event to program n°", userProgramId);
+      const addEvent = await fetch(
+        `https://feffs.elioooooo.fr/program/add-event/${userProgramId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            event: eventId,
+          }),
+        }
+      ).then((data) => {
+        console.log("Add event status:", data.status);
+        return data;
+      });
 
-    const addEvent = await fetch(
-      `https://feffs.elioooooo.fr/program/add-envent/${userProgramId}`,
-      {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        event: eventData,
-      }),
+      if (addEvent.status === 200) {
+        alert("Évènement ajouté au programme avec succès");
+      } else {
+        alert("Erreur lors de l'ajout de l'évènement au programme");
       }
-    );
-
-    if (addEvent.status === 200) {
-      alert("Évènement ajouté au programme avec succès");
     } else {
-      alert("Erreur lors de l'ajout de l'évènement au programme");
+      alert(
+        "Vous devez être connecté pour ajouter un évènement à votre programme"
+      );
+      return;
+    }
+  };
+
+  const handleRemove = async (eventId: string) => {
+    console.log("eventId:", eventId);
+    console.log("Remove event from personal calendar...");
+    const userEmail = await AsyncStorage.getItem("email");
+  
+    if (userEmail !== null) {
+      // With userEmail, return userId
+      console.log("User email:", userEmail);
+      const userIdResponse = await fetch("https://feffs.elioooooo.fr/user/get/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userEmail,
+        }),
+      });
+  
+      const userIdData = await userIdResponse.json();
+      const userId = userIdData.userId;
+  
+      // With userId, return userProgramId
+      const userProgramResponse = await fetch(
+        "https://feffs.elioooooo.fr/program/get/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userId,
+          }),
+        }
+      );
+  
+      console.log("User program status:", userProgramResponse.status);
+  
+      let userProgramId = null;
+      if (userProgramResponse.status === 200) {
+        console.log("Program existant");
+        const userProgramData = await userProgramResponse.json();
+        console.log("Program n°", userProgramData._id);
+        userProgramId = userProgramData._id;
+      } else {
+        console.log("Program inexistant");
+      }
+  
+      if (userProgramId) {
+        console.log("Remove event from program n°", userProgramId);
+        const removeEventResponse = await fetch(
+          `https://feffs.elioooooo.fr/program/remove-event/${userProgramId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              event: eventId,
+            }),
+          }
+        );
+  
+        console.log("Remove event status:", removeEventResponse.status);
+  
+        if (removeEventResponse.status === 200) {
+          alert("Évènement retiré du programme avec succès");
+        } else {
+          alert("Erreur lors de l'enlèvement de l'évènement du programme");
+        }
+      } else {
+        alert("Erreur : Programme utilisateur introuvable");
+      }
+    } else {
+      alert("Vous devez être connecté pour retirer un évènement de votre programme");
     }
   };
 
@@ -162,7 +258,12 @@ export default function TmpEvent() {
               </Text>
               <Pressable onPress={() => handleAdd(event._id)}>
                 <Text style={{ color: Colors[colorScheme ?? "light"].button }}>
-                  En savoir plus
+                  ajouter au program
+                </Text>
+              </Pressable>
+              <Pressable onPress={() => handleRemove(event._id)}>
+                <Text style={{ color: Colors[colorScheme ?? "light"].button }}>
+                  retirer du program
                 </Text>
               </Pressable>
             </View>
