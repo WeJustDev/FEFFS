@@ -11,6 +11,7 @@ export default function TmpEvent() {
   const [userProgramId, setUserProgramId] = useState<string | null>(null);
   const [event, setEvent] = useState<any>(null);
 
+  const [hasError, setHasError] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<boolean>(false);
 
@@ -24,10 +25,12 @@ export default function TmpEvent() {
   });
 
   useEffect(() => {
-    setNotification(true);
-    setTimeout(() => {
-      setNotification(false);
-    }, 3000);
+    if(hasError) {
+      setNotification(true);
+      setTimeout(() => {
+        setNotification(false);
+      }, 3000);
+    }
   }, [error]);
 
   const handleAdd = async (eventId: string) => {
@@ -127,6 +130,7 @@ export default function TmpEvent() {
         "Erreur : Vous devez être connecté pour ajouter un évènement à votre programme"
       );
     }
+    setHasError(true);
   };
 
   const handleRemove = async (eventId: string) => {
@@ -209,6 +213,7 @@ export default function TmpEvent() {
         "Erreur : Vous devez être connecté pour retirer un évènement de votre programme"
       );
     }
+    setHasError(true);
   };
 
   return (
