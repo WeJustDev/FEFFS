@@ -68,11 +68,11 @@ const styles = StyleSheet.create({
   indicatorContainer: {
     flexDirection: 'row',
     alignSelf: 'center',
-    marginTop: 8,
+    marginTop: -2,
   },
   indicator: {
-    width: 8,
-    height: 8,
+    width: 5,
+    height: 5,
     borderRadius: 4,
     backgroundColor: '#888',
     marginHorizontal: 4,
