@@ -250,21 +250,21 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
             {error && <Text style={styles.error}>{error}</Text>}
             <TextInput
               placeholder="Nom"
-              style={styles.input}
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
               placeholderTextColor="#aaa"
               value={name}
               onChangeText={setName}
             />
             <TextInput
               placeholder="Prénom"
-              style={styles.input}
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
               placeholderTextColor="#aaa"
               value={firstname}
               onChangeText={setFirstname}
             />
             <TextInput
               placeholder="Email"
-              style={styles.input}
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
               keyboardType="email-address"
               placeholderTextColor="#aaa"
               value={email}
@@ -272,7 +272,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
             />
             <TextInput
               placeholder="Mot de passe"
-              style={styles.input}
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
               secureTextEntry={true}
               placeholderTextColor="#aaa"
               value={psw}
@@ -294,7 +294,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
             {error && <Text style={styles.error}>{error}</Text>}
             <TextInput
               placeholder="Email"
-              style={styles.input}
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
               keyboardType="email-address"
               placeholderTextColor="#aaa"
               value={email}
@@ -302,7 +302,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
             />
             <TextInput
               placeholder="Mot de passe"
-              style={styles.input}
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
               secureTextEntry={true}
               placeholderTextColor="#aaa"
               value={psw}

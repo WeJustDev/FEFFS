@@ -99,28 +99,21 @@ export default function Pass() {
     });
   }, []);
 
-  useEffect(() => {
-    if (infosNeeded.length === 0) {
-      console.log("All infos are stored");
-    } else {
-      console.log("Infos missing: " + infosNeeded.join(", "));
-    }
-  }, [infosNeeded]); 
+  // useEffect(() => {
+  //   if (infosNeeded.length === 0) {
+  //     console.log("All infos are stored");
+  //   } else {
+  //     console.log("Infos missing: " + infosNeeded.join(", "));
+  //   }
+  // }, [infosNeeded]); 
 
-  useEffect(() => {
-    if (pass) {
-      console.log(pass.number);
-    }
-  }, [pass]);
+  // useEffect(() => {
+  //   if (pass) {
+  //     console.log(pass.number);
+  //   }
+  // }, [pass]);
 
   const handleGeneration = () => { 
-    console.log("QR Code generated");
-    console.log("Lastname: " + lastname);
-    console.log("Firstname: " + firstname);
-    console.log("Email: " + email);
-    console.log("Birthdate: " + birthdate);
-    console.log("Image: " + image);
-
     AsyncStorage.setItem("name", lastname);
     AsyncStorage.setItem("firstname", firstname);
     AsyncStorage.setItem("email", email);
@@ -143,7 +136,6 @@ export default function Pass() {
         })
         .then((response) => response.json())
         .then((data) => {
-            console.log("Success:", data);
             AsyncStorage.setItem("pass", JSON.stringify(data));
             setPass(data);
         })
@@ -196,6 +188,7 @@ export default function Pass() {
           maxWidth: "100%",
           padding: 20,
           paddingTop: 0,
+          flex: 1
         }}
       >
         { pass ? (
@@ -221,95 +214,89 @@ export default function Pass() {
             />
             <QRCode
               logo={{ uri: base64logo }}
-              value={`Pass valide pour ${pass.lastname} ${pass.firstname}`}
+              value={`https://feffs.elioooooo.fr/pass/get/${pass._id}`}
               logoBackgroundColor='transparent'
             />
+            <Pressable
+              style={{ backgroundColor: "red", padding: 10 }}
+              onPress={() => {
+                AsyncStorage.removeItem("name");
+                AsyncStorage.removeItem("firstname");
+                AsyncStorage.removeItem("email");
+                AsyncStorage.removeItem("birthdate");
+                AsyncStorage.removeItem("image");
+                AsyncStorage.removeItem("pass");
+                setPass(null);
+              }}
+            >
+              <Text>Supprimer mon Pass</Text>
+            </Pressable>
           </View>
         ) : (
           <>
-            <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
+            <Text style={{ color: Colors[colorScheme ?? "light"].text, }}>
               Vous êtes sur le point de générer votre Pass pour le festival :
             </Text>
-            {infosNeeded.includes("lastname") && (
-              <>
-                <TextInput
-                  placeholder="Nom"
+              <TextInput
+                placeholder="Nom"
+                style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                placeholderTextColor="#aaa"
+                value={lastname}
+                onChangeText={setLastname}
+              />
+              <TextInput
+                placeholder="Prénom"
+                style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                placeholderTextColor="#aaa"
+                value={firstname}
+                onChangeText={setFirstname}
+              />
+              <TextInput
+                placeholder="Email"
+                style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                placeholderTextColor="#aaa"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
+                Date de naissance
+              </Text>
+              <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
+                <Picker
+                  selectedValue={birthdate.split("-")[2] || ""}
+                  style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                  onValueChange={(day) => setBirthdate(`${birthdate.split("-")[0] || ""}-${birthdate.split("-")[1] || ""}-${day}`)}
+                >
+                  {[...Array(31).keys()].map((day) => (
+                    <Picker.Item style={[ styles.input, { color: Colors[colorScheme ?? 'light'].text } ]} key={day + 1} label={`${day + 1}`} value={`${day + 1}`} />
+                  ))}
+                </Picker>
+                <Picker
+                  selectedValue={birthdate.split("-")[1] || ""}
+                  style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                  onValueChange={(month) => setBirthdate(`${birthdate.split("-")[0] || ""}-${month}-${birthdate.split("-")[2] || ""}`)}
+                >
+                  {[...Array(12).keys()].map((month) => (
+                    <Picker.Item key={month + 1} label={`${month + 1}`} value={`${month + 1}`} />
+                  ))}
+                </Picker>
+                <Picker
+                  selectedValue={birthdate.split("-")[0] || ""}
                   style={styles.input}
-                  placeholderTextColor="#aaa"
-                  value={lastname}
-                  onChangeText={setLastname}
-                />
-              </>
-            )}
-            {infosNeeded.includes("firstname") && (
-              <>
-                <TextInput
-                  placeholder="Prénom"
-                  style={styles.input}
-                  placeholderTextColor="#aaa"
-                  value={firstname}
-                  onChangeText={setFirstname}
-                />
-              </>
-            )}
-            {infosNeeded.includes("email") && (
-              <>
-                <TextInput
-                  placeholder="Email"
-                  style={styles.input}
-                  placeholderTextColor="#aaa"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </>
-            )}
-            {infosNeeded.includes("birthdate") && (
-              <>
-                <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-                  Date de naissance
-                </Text>
-                <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
-                  <Picker
-                    selectedValue={birthdate.split("-")[2] || ""}
-                    style={styles.input}
-                    onValueChange={(day) => setBirthdate(`${birthdate.split("-")[0] || ""}-${birthdate.split("-")[1] || ""}-${day}`)}
-                  >
-                    {[...Array(31).keys()].map((day) => (
-                      <Picker.Item key={day + 1} label={`${day + 1}`} value={`${day + 1}`} />
-                    ))}
-                  </Picker>
-                  <Picker
-                    selectedValue={birthdate.split("-")[1] || ""}
-                    style={styles.input}
-                    onValueChange={(month) => setBirthdate(`${birthdate.split("-")[0] || ""}-${month}-${birthdate.split("-")[2] || ""}`)}
-                  >
-                    {[...Array(12).keys()].map((month) => (
-                      <Picker.Item key={month + 1} label={`${month + 1}`} value={`${month + 1}`} />
-                    ))}
-                  </Picker>
-                  <Picker
-                    selectedValue={birthdate.split("-")[0] || ""}
-                    style={styles.input}
-                    onValueChange={(year) => setBirthdate(`${year}-${birthdate.split("-")[1] || ""}-${birthdate.split("-")[2] || ""}`)}
-                  >
-                    {[...Array(100).keys()].map((year) => (
-                      <Picker.Item key={year + 1920} label={`${year + 1920}`} value={`${year + 1920}`} />
-                    ))}
-                  </Picker>
-                </View>
-              </>
-            )}
-            {infosNeeded.includes("image") && (
-              <>
-                <TextInput
-                  placeholder="Image de l'utilisateur"
-                  style={styles.input}
-                  placeholderTextColor="#aaa"
-                  value={image}
-                  onChangeText={setImage}
-                />
-              </>
-            )}
+                  onValueChange={(year) => setBirthdate(`${year}-${birthdate.split("-")[1] || ""}-${birthdate.split("-")[2] || ""}`)}
+                >
+                  {[...Array(100).keys()].map((year) => (
+                    <Picker.Item key={year + 1920} label={`${year + 1920}`} value={`${year + 1920}`} />
+                  ))}
+                </Picker>
+              </View>
+              <TextInput
+                placeholder="Image de l'utilisateur"
+                style={styles.input}
+                placeholderTextColor="#aaa"
+                value={image}
+                onChangeText={setImage}
+              />
             <Pressable
               style={{ backgroundColor: "red", padding: 10 }}
               onPress={handleGeneration}
@@ -353,7 +340,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     padding: 15,
-    height: 70,
+    width: "100%",
     fontSize: 16,
     marginBottom: 15,
     color: "#fff",
