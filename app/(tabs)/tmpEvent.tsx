@@ -72,17 +72,23 @@ export default function TmpEvent() {
     const eventData = await event.json();
 
     const addEvent = await fetch(
-      `https://feffs.elioooooo.fr/program/update/${userProgramId}`,
+      `https://feffs.elioooooo.fr/program/add-envent/${userProgramId}`,
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          event: eventData,
-        }),
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        event: eventData,
+      }),
       }
     );
+
+    if (addEvent.status === 200) {
+      alert("Évènement ajouté au programme avec succès");
+    } else {
+      alert("Erreur lors de l'ajout de l'évènement au programme");
+    }
   };
 
   return (
