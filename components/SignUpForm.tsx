@@ -201,7 +201,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
         }
     };
 
-        return (
+    return (
       <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
         <View style={styles.topSection}>
           <View style={{
