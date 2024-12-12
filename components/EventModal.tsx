@@ -121,7 +121,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 25,
     alignSelf: 'flex-end',
-    marginTop: 10,
+    width: '100%',
+    textAlign: 'center',
   },
   closeButtonText: {
     color: '#fff',
