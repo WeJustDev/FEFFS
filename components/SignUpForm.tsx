@@ -6,30 +6,44 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    Button,
-    Platform,
     Image,
 } from 'react-native';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Crypto from 'expo-crypto';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
 
 export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
+    const colorScheme = useColorScheme();
+
+    const [formType, setFormType] = useState<'signup' | 'signin'>('signup');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [firstname, setFirstname] = useState('');
+    const [psw, setPsw] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isFormVisible, setIsFormVisible] = useState(false);
 
     const formPosition = useRef(new Animated.Value(800)).current;
 
+    const hashedPsw = async (psw: string): Promise<string> => {    
+        return await Crypto.digestStringAsync(
+            Crypto.CryptoDigestAlgorithm.SHA256,
+            psw
+        );
+    } 
+        
     useEffect(() => {
         const checkUser = async () => {
             const storedName = await AsyncStorage.getItem('name');
             const storedEmail = await AsyncStorage.getItem('email');
-            if (storedName && storedEmail) {
+            const storedFirstname = await AsyncStorage.getItem('firstname');
+            if (storedName && storedEmail && storedFirstname ) {
                 setName(storedName);
                 setEmail(storedEmail);
+                setFirstname(storedFirstname);
                 onLogin();
             }
         };
@@ -58,7 +72,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
 
     // Gérer l'inscription
     const handleSignUp = async () => {
-        if (!name || !email) {
+        if (!name || !email || !firstname || !psw) {
             setError('Veuillez remplir tous les champs.');
             return;
         }
@@ -70,12 +84,78 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
         try {
             await AsyncStorage.setItem('name', name);
             await AsyncStorage.setItem('email', email);
+            await AsyncStorage.setItem('firstname', firstname);
+            const hashedPassword = await hashedPsw(psw);
+
+            const response = await fetch('https://feffs.elioooooo.fr/user/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "userId": null,
+                    "email": email,
+                    "birthdate": null,
+                    "image": null,
+                    "firstname": firstname,
+                    "lastname": name,
+                    "password": hashedPassword,
+                }),
+            });
+            
+            if (!response.ok) {
+                setError('Erreur lors de l\'inscription.');
+            }
             onLogin();
             setError(null);
         } catch (error) {
             setError('Erreur lors de l\'enregistrement.');
         }
     };
+
+    const handleSignIn = async () => {
+        if ( !email || !psw) {
+            setError('Veuillez remplir tous les champs.');
+            return;
+        }
+        if (!/\S+@\S+\.\S+/.test(email)) {
+            setError('Veuillez entrer un email valide.');
+            return;
+        }
+
+        try {
+            const hashedPassword = await hashedPsw(psw);
+
+            const userByEmail = await fetch(`https://feffs.elioooooo.fr/user/verify`, {
+                method: 'Post',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "email": email,
+                    "password": hashedPassword,
+                }),
+            });
+            
+            const contentType = userByEmail.headers.get('content-type');
+            if (contentType && contentType.indexOf('application/json') !== -1) {
+                const userData = await userByEmail.json();
+                if (userData.success == true) {
+                    await AsyncStorage.setItem('name', userData.user.lastname);
+                    await AsyncStorage.setItem('email', email);
+                    await AsyncStorage.setItem('firstname', userData.user.firstname);
+                    onLogin();
+                    setError(null);
+                } else {
+                    setError('Mot de passe incorrect.');
+                }
+            } else {
+                setError('Réponse du serveur invalide.');
+            }
+        } catch (error) {
+            setError(`Erreur lors de l\'enregistrement. ${error}`);
+        }
+    }
 
     // Gérer l'importation du profil
     const handleImportProfile = async () => {
@@ -93,14 +173,11 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
 
             if (result.assets && result.assets.length > 0) {
                 const uri = result.assets[0].uri;
-                console.log('URI du fichier sélectionné :', uri);
 
                 const response = await fetch(uri);
                 const fileContent = await response.text();
-                console.log('Contenu du fichier :', fileContent);
 
                 const profile = JSON.parse(fileContent);
-                console.log('Profil importé :', profile);
                 if (profile.name && profile.email) {
                     setName(profile.name);
                     setEmail(profile.email);
@@ -114,11 +191,9 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
                     onLogin();
                 } else {
                     setError('Le fichier ne contient pas de données valides.');
-                    console.log('Données du profil invalides');
                 }
             } else {
                 setError('Aucun fichier sélectionné.');
-                console.log('Aucun fichier sélectionné.');
             }
         } catch (error) {
             setError('Erreur lors de l\'importation du profil.');
@@ -126,48 +201,52 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
         }
     };
 
-        return (
-      <View style={styles.container}>
+    return (
+      <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
         <View style={styles.topSection}>
           <View style={{
-            width: '20%',
-            height: '11%',
+            width: 80,
+            height: 80,
             borderRadius: 50,
             marginBottom: 20,
             shadowColor: '#fff',
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.5,
             shadowRadius: 25,
-            elevation: 10, // Pour Android
-            overflow: 'hidden', // Pour s'assurer que l'image respecte les bordures arrondies
+            elevation: 10,
+            overflow: 'hidden'
           }}>
             <Image
               style={{ width: '100%', height: '100%' }}
               source={require('@/assets/images/logo.png')}
             />
           </View>
-          <Text style={styles.tagline}>
+          <Text style={[styles.tagline, {color: Colors[colorScheme ?? 'light'].text}]}>
             Simplifiez votre expérience, inscrivez-vous rapidement.
           </Text>
-          <TouchableOpacity style={styles.startButton} onPress={handleStart}>
-            <Text style={styles.startButtonText}>Commencer</Text>
+          <TouchableOpacity style={styles.startButton} onPress={() => { handleStart(); setFormType('signup'); }}>
+            <Text style={styles.startButtonText}>S'inscrire</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.importButton} onPress={() => { handleStart(); setFormType('signin'); }}>
+            <Text style={styles.startButtonText}>Se connecter</Text>
           </TouchableOpacity>
     
           {/* Nouveau bouton "Importer mon profil" */}
-          <TouchableOpacity style={styles.importButton} onPress={handleImportProfile}>
+          {/* <TouchableOpacity style={styles.importButton} onPress={handleImportProfile}>
             <Text style={styles.importButtonText}>Importer mon profil</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
     
         {/* Formulaire animé */}
-        {isFormVisible && (
+        {isFormVisible && formType === 'signup' && (
           <Animated.View
-            style={[styles.formContainer, { transform: [{ translateY: formPosition }] }]}>
+            style={[styles.formContainer, { transform: [{ translateY: formPosition }], backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
             <TouchableOpacity style={styles.closeButton} onPress={handleCloseForm}>
-              <Text style={styles.closeButtonText}>✕</Text>
+              <Text style={[styles.closeButtonText, { color: Colors[colorScheme ?? 'light'].text }]}>✕</Text>
             </TouchableOpacity>
-            <Text style={styles.formTitle}>Créer un compte</Text>
-            <Text style={styles.formSubtitle}>Inscrivez-vous pour continuer</Text>
+            <Text style={[styles.formTitle, { color: Colors[colorScheme ?? 'light'].text }]}>Créer un compte</Text>
+            <Text style={[styles.formSubtitle, { color: Colors[colorScheme ?? 'light'].text }]}>Inscrivez-vous pour continuer</Text>
             {error && <Text style={styles.error}>{error}</Text>}
             <TextInput
               placeholder="Nom"
@@ -177,6 +256,13 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
               onChangeText={setName}
             />
             <TextInput
+              placeholder="Prénom"
+              style={styles.input}
+              placeholderTextColor="#aaa"
+              value={firstname}
+              onChangeText={setFirstname}
+            />
+            <TextInput
               placeholder="Email"
               style={styles.input}
               keyboardType="email-address"
@@ -184,8 +270,46 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
               value={email}
               onChangeText={setEmail}
             />
+            <TextInput
+              placeholder="Mot de passe"
+              style={styles.input}
+              secureTextEntry={true}
+              placeholderTextColor="#aaa"
+              value={psw}
+              onChangeText={setPsw}
+            />
             <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
               <Text style={styles.submitButtonText}>S'inscrire</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+        {isFormVisible && formType === 'signin' && (
+          <Animated.View
+            style={[styles.formContainer, { transform: [{ translateY: formPosition }], backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
+            <TouchableOpacity style={styles.closeButton} onPress={handleCloseForm}>
+              <Text style={[styles.closeButtonText, { color: Colors[colorScheme ?? 'light'].text }]}>✕</Text>
+            </TouchableOpacity>
+            <Text style={[styles.formTitle, { color: Colors[colorScheme ?? 'light'].text }]}>Se connecter</Text>
+            <Text style={[styles.formSubtitle, { color: Colors[colorScheme ?? 'light'].text }]}>Connectez-vous à un compte déjà existant</Text>
+            {error && <Text style={styles.error}>{error}</Text>}
+            <TextInput
+              placeholder="Email"
+              style={styles.input}
+              keyboardType="email-address"
+              placeholderTextColor="#aaa"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextInput
+              placeholder="Mot de passe"
+              style={styles.input}
+              secureTextEntry={true}
+              placeholderTextColor="#aaa"
+              value={psw}
+              onChangeText={setPsw}
+            />
+            <TouchableOpacity style={styles.submitButton} onPress={handleSignIn}>
+              <Text style={styles.submitButtonText}>Se connecter</Text>
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -195,8 +319,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#191919',
+        flex: 1
     },
     topSection: {
         flex: 1,
@@ -212,13 +335,11 @@ const styles = StyleSheet.create({
     },
     tagline: {
         fontSize: 16,
-        color: '#fff',
         textAlign: 'center',
         marginBottom: 20,
     },
     startButton: {
         backgroundColor: 'rgba(206, 90, 75, 0.3)',
-  
         paddingVertical: 15,
         paddingHorizontal: 40,
         borderRadius: 25,
@@ -226,7 +347,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 5,
-        elevation: 5,
     },
     startButtonText: {
         color: 'rgba(206, 90, 75, 1)',
@@ -250,9 +370,8 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         position: 'absolute',
-        bottom: 45,
+        bottom: 0,
         width: '100%',
-        backgroundColor: '#262626',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         padding: 20,
@@ -269,18 +388,15 @@ const styles = StyleSheet.create({
     },
     closeButtonText: {
         fontSize: 24,
-        color: '#fff',
     },
     formTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#fff',
         textAlign: 'center',
         marginBottom: 10,
     },
     formSubtitle: {
         fontSize: 14,
-        color: '#fff',
         textAlign: 'center',
         marginBottom: 20,
     },
