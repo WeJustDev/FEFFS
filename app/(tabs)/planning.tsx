@@ -27,6 +27,7 @@ let days = [
 ];
 
 type Showtime = {
+  _id: string;
   title: string;
   date: Date;
   localisation: string;
@@ -50,9 +51,11 @@ export default function Planning() {
 
   const fetchProg = async () => {
     const storedProg = await AsyncStorage.getItem("program");
+    console.log(storedProg);
     if (storedProg) {
       const parsedProg = JSON.parse(storedProg);
       setProg(parsedProg);
+      console.log(parsedProg);
       setShowtimes(parsedProg.events);
     }
   };
@@ -68,7 +71,11 @@ export default function Planning() {
         const data = await response.json();
         const programData = data[0];
 
-        if (programData && programData.events && Array.isArray(programData.events)) {
+        if (
+          programData &&
+          programData.events &&
+          Array.isArray(programData.events)
+        ) {
           const newShowtimes = [];
           for (let index = 0; index < programData.events.length; index++) {
             let showtimeId = programData.events[index];
@@ -85,7 +92,9 @@ export default function Planning() {
           }
           setUpdatedShowtimes(markOverlappingEvents(newShowtimes));
         } else {
-          console.error("Invalid data format: events is not an array or is undefined");
+          console.error(
+            "Invalid data format: events is not an array or is undefined"
+          );
         }
       } catch (error) {
         console.error("Error fetching showtimes:", error);
@@ -104,6 +113,88 @@ export default function Planning() {
       fetchShowtimes();
     }
   }, [prog]);
+
+  const handleDelete = async (eventId: string) => {
+    console.log("eventId:", eventId);
+    console.log("Remove event from personal calendar...");
+    const userEmail = await AsyncStorage.getItem("email");
+
+    if (userEmail !== null) {
+      // With userEmail, return userId
+      console.log("User email:", userEmail);
+      const userIdResponse = await fetch(
+        "https://feffs.elioooooo.fr/user/get/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: userEmail,
+          }),
+        }
+      );
+
+      const userIdData = await userIdResponse.json();
+      const userId = userIdData.userId;
+
+      // With userId, return userProgramId
+      const userProgramResponse = await fetch(
+        "https://feffs.elioooooo.fr/program/get/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userId,
+          }),
+        }
+      );
+
+      console.log("User program status:", userProgramResponse.status);
+
+      let userProgramId = null;
+      if (userProgramResponse.status === 200) {
+        console.log("Program existant");
+        const userProgramData = await userProgramResponse.json();
+        console.log("Program n°", userProgramData._id);
+        userProgramId = userProgramData._id;
+      } else {
+        console.log("Program inexistant");
+      }
+
+      if (userProgramId) {
+        console.log("Remove event from program n°", userProgramId);
+        const removeEventResponse = await fetch(
+          `https://feffs.elioooooo.fr/program/remove-event/${userProgramId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              event: eventId,
+            }),
+          }
+        );
+
+        console.log("Remove event status:", removeEventResponse.status);
+
+        if (removeEventResponse.status === 200) {
+          // setError("Évènement retiré du programme avec succès");
+        } else {
+          // setError("Erreur : Lors de l'enlèvement de l'évènement du programme");
+        }
+      } else {
+        // setError("Erreur : Programme utilisateur introuvable");
+      }
+    } else {
+      // setError( "Erreur : Vous devez être connecté pour retirer un évènement de votre programme");
+    }
+    // setHasError(true);
+    setRefresh(refresh + 1);
+  };
 
   const [selectedDay, setSelectedDay] = useState(
     days.find((day) => day.startsWith(currentDay.toString())) || days[0]
@@ -125,7 +216,11 @@ export default function Planning() {
   const hasEventsForDay = (day) => {
     return updatedShowtimes.some((showtime) => {
       const showtimeDate = new Date(showtime.date);
-      const showtimeDay = `${showtimeDate.getDate()}-${(showtimeDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      const showtimeDay = `${showtimeDate.getDate()}-${(
+        showtimeDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}`;
       return showtimeDay === day;
     });
   };
@@ -280,7 +375,9 @@ export default function Planning() {
                     color={Colors[colorScheme ?? "light"].textsecondary}
                   />
                   <Text
-                    style={{ color: Colors[colorScheme ?? "light"].textsecondary }}
+                    style={{
+                      color: Colors[colorScheme ?? "light"].textsecondary,
+                    }}
                   >
                     {showtime.localisation}
                   </Text>
@@ -288,8 +385,7 @@ export default function Planning() {
                 {showtime.overlap && (
                   <View
                     style={{
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"].dateTagBg,
+                      backgroundColor: Colors[colorScheme ?? "light"].dateTagBg,
                       padding: 2,
                       borderRadius: 4,
                       display: "flex",
@@ -312,15 +408,33 @@ export default function Planning() {
                   </View>
                 )}
               </View>
+              <Pressable
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: 7,
+                  borderRadius: 100,
+                  backgroundColor: Colors[colorScheme ?? "light"].dateTagBg,
+                }}
+                onPress={() => {handleDelete(showtime._id)}}
+              >
+                <IconSymbol
+                  name="delete.fill"
+                  size={20}
+                  color={Colors[colorScheme ?? "light"].dateTagText}
+                />
+              </Pressable>
             </View>
           ))
         ) : (
-          <View style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <View style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
               Aucun événement programmé pour ce jour.
             </Text>
             <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-              La programmation des évènements se fait depuis l'onglet Evènements.
+              La programmation des évènements se fait depuis l'onglet
+              Evènements.
             </Text>
           </View>
         )}
@@ -349,10 +463,17 @@ export default function Planning() {
     overlap?: boolean;
   }
 
-  function filterShowtimesByDay(showtimes: Showtime[], selectedDay: string): Showtime[] {
+  function filterShowtimesByDay(
+    showtimes: Showtime[],
+    selectedDay: string
+  ): Showtime[] {
     return showtimes.filter((showtime) => {
       const showtimeDate = new Date(showtime.date);
-      const showtimeDay = `${showtimeDate.getDate()}-${(showtimeDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      const showtimeDay = `${showtimeDate.getDate()}-${(
+        showtimeDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}`;
       return showtimeDay === selectedDay;
     });
   }
@@ -367,7 +488,9 @@ export default function Planning() {
     overlap?: boolean;
   }
 
-  function sortShowtimes(showtimes: ShowtimeWithDetails[]): ShowtimeWithDetails[] {
+  function sortShowtimes(
+    showtimes: ShowtimeWithDetails[]
+  ): ShowtimeWithDetails[] {
     return showtimes.sort((a, b) => {
       const startA = new Date(a.date).getTime();
       const startB = new Date(b.date).getTime();
@@ -381,12 +504,15 @@ export default function Planning() {
     });
   }
 
-  function markOverlappingEvents(showtimes: ShowtimeWithDetails[]): ShowtimeWithDetails[] {
+  function markOverlappingEvents(
+    showtimes: ShowtimeWithDetails[]
+  ): ShowtimeWithDetails[] {
     const sortedShowtimes = sortShowtimes(showtimes);
     for (let i = 0; i < sortedShowtimes.length; i++) {
       const currentEvent = sortedShowtimes[i];
       const currentStart = new Date(currentEvent.date).getTime();
-      const currentEnd = currentStart + currentEvent.eventDetails.duration * 60000;
+      const currentEnd =
+        currentStart + currentEvent.eventDetails.duration * 60000;
 
       for (let j = i + 1; j < sortedShowtimes.length; j++) {
         const nextEvent = sortedShowtimes[j];
@@ -427,5 +553,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 20,
     fontWeight: "bold",
-  }
+  },
 });

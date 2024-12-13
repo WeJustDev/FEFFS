@@ -71,8 +71,10 @@ export default function Index() {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('name');
+      await AsyncStorage.removeItem('firstname')
       await AsyncStorage.removeItem('email');
       await AsyncStorage.removeItem('pass');
+      await AsyncStorage.removeItem('program');
     } catch (e) {
       console.error('Erreur lors de la suppression des données utilisateur.', e);
     }

@@ -17,6 +17,7 @@ const MAPPING = {
   'location.fill': 'location-on',
   'error.fill': 'error',
   'checkmark': 'check',
+  'delete.fill': 'delete-forever'
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

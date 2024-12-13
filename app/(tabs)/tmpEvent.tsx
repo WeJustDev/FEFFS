@@ -78,10 +78,11 @@ export default function TmpEvent() {
         const userProgramData = await userProgramResponse.json();
         console.log("Program n°", userProgramData._id);
         userProgramId = userProgramData._id;
-      } else {
+      } else if (userProgramResponse.status === 404) {
         console.log("Program inexistant");
+        console.log(userId)
         const newProgramResponse = await fetch(
-          "https://feffs.elioooooo.fr/program/create/",
+          "https://feffs.elioooooo.fr/program/add/",
           {
             method: "POST",
             headers: {
@@ -93,10 +94,19 @@ export default function TmpEvent() {
           }
         );
 
-        if (newProgramResponse.status === 200) {
-          const newProgramData = await newProgramResponse.json();
-          console.log("Création du program n°", newProgramData._id);
-          userProgramId = newProgramData._id;
+        if (newProgramResponse.status === 201 || newProgramResponse.status === 200) {
+          try {
+            console.log(newProgramResponse.status);
+            const newProgramData = await newProgramResponse.json();
+            console.log(newProgramData);
+            await AsyncStorage.setItem("program", JSON.stringify(newProgramData));
+            console.log("Création du program n°", newProgramData._id);
+            userProgramId = newProgramData._id;
+          } catch (error) {
+            console.log("Error: ", error);
+          }
+        } else {
+          console.log(newProgramResponse.status);
         }
       }
 
