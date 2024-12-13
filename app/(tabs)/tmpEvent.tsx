@@ -25,9 +25,10 @@ export default function TmpEvent() {
   });
 
   useEffect(() => {
-    if(hasError) {
+    if(error && hasError) {
       setNotification(true);
       setTimeout(() => {
+        setError(null);
         setNotification(false);
       }, 3000);
     }
@@ -102,8 +103,9 @@ export default function TmpEvent() {
             await AsyncStorage.setItem("program", JSON.stringify(newProgramData));
             console.log("Création du program n°", newProgramData._id);
             userProgramId = newProgramData._id;
+            setError("Évènement ajouté au programme avec succès");
           } catch (error) {
-            console.log("Error: ", error);
+            setError("Erreur : Lors de la création du programme");
           }
         } else {
           console.log(newProgramResponse.status);
