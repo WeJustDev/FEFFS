@@ -59,43 +59,43 @@ export default function Planning() {
     fetchProg();
   }, []);
 
-    useEffect(() => {
-      const fetchShowtimes = async () => {
-        if (prog) {
-          try {
-            const response = await fetch(
-              `https://feffs.elioooooo.fr/program/get/${prog.userId}`
-            );
-            const data = await response.json();
-            const programData = data[0];
-    
-            if (programData && programData.events && Array.isArray(programData.events)) {
-              const newShowtimes = [];
-              for (let index = 0; index < programData.events.length; index++) {
-                let showtimeId = programData.events[index];
-                let showtime = await fetch(
-                  `https://feffs.elioooooo.fr/showtime/get/${showtimeId}`
-                ).then((response) => response.json());
-    
-                let event = await fetch(
-                  `https://feffs.elioooooo.fr/event/get/${showtime.event}`
-                ).then((response) => response.json());
-    
-                showtime.eventDetails = event;
-                newShowtimes.push(showtime);
-              }
-              setUpdatedShowtimes(newShowtimes);
-            } else {
-              console.error("Invalid data format: events is not an array or is undefined");
+  useEffect(() => {
+    const fetchShowtimes = async () => {
+      if (prog) {
+        try {
+          const response = await fetch(
+            `https://feffs.elioooooo.fr/program/get/${prog.userId}`
+          );
+          const data = await response.json();
+          const programData = data[0];
+
+          if (programData && programData.events && Array.isArray(programData.events)) {
+            const newShowtimes = [];
+            for (let index = 0; index < programData.events.length; index++) {
+              let showtimeId = programData.events[index];
+              let showtime = await fetch(
+                `https://feffs.elioooooo.fr/showtime/get/${showtimeId}`
+              ).then((response) => response.json());
+
+              let event = await fetch(
+                `https://feffs.elioooooo.fr/event/get/${showtime.event}`
+              ).then((response) => response.json());
+
+              showtime.eventDetails = event;
+              newShowtimes.push(showtime);
             }
-          } catch (error) {
-            console.error("Error fetching showtimes:", error);
+            setUpdatedShowtimes(sortShowtimes(newShowtimes));
+          } else {
+            console.error("Invalid data format: events is not an array or is undefined");
           }
+        } catch (error) {
+          console.error("Error fetching showtimes:", error);
         }
-      };
-    
-      fetchShowtimes();
-    }, [prog, refresh]);
+      }
+    };
+
+    fetchShowtimes();
+  }, [prog, refresh]);
 
   const [selectedDay, setSelectedDay] = useState(
     days.find((day) => day.startsWith(currentDay.toString())) || days[0]
@@ -275,9 +275,7 @@ export default function Planning() {
                     color={Colors[colorScheme ?? "light"].textsecondary}
                   />
                   <Text
-                    style={{
-                      color: Colors[colorScheme ?? "light"].textsecondary,
-                    }}
+                    style={{ color: Colors[colorScheme ?? "light"].textsecondary }}
                   >
                     {showtime.localisation}
                   </Text>
@@ -285,7 +283,8 @@ export default function Planning() {
                 {showtime.overlap && (
                   <View
                     style={{
-                      backgroundColor: Colors[colorScheme ?? "light"].dateTagBg,
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"].dateTagBg,
                       padding: 2,
                       borderRadius: 4,
                       display: "flex",
@@ -316,8 +315,7 @@ export default function Planning() {
               Aucun événement programmé pour ce jour.
             </Text>
             <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-              La programmation des évènements se fait depuis l'onglet
-              Evènements.
+              La programmation des évènements se fait depuis l'onglet Evènements.
             </Text>
           </View>
         )}
@@ -347,7 +345,7 @@ export default function Planning() {
     return `${endHours}:${endMinutes}`;
   }
 
-  function filterShowtimesByDay(showtimes, selectedDay) {
+  function filterShowtimesByDay(showtimes: ShowtimeWithDetails[], selectedDay: string): ShowtimeWithDetails[] {
     return showtimes.filter((showtime) => {
       const showtimeDate = new Date(showtime.date);
       const showtimeDay = `${showtimeDate.getDate()}-${(
@@ -356,6 +354,27 @@ export default function Planning() {
         .toString()
         .padStart(2, "0")}`;
       return showtimeDay === selectedDay;
+    });
+  }
+
+  interface ShowtimeWithDetails extends Showtime {
+    eventDetails: {
+      title: string;
+      duration: number;
+    };
+  }
+
+  function sortShowtimes(showtimes: ShowtimeWithDetails[]): ShowtimeWithDetails[] {
+    return showtimes.sort((a, b) => {
+      const startA = new Date(a.date).getTime();
+      const startB = new Date(b.date).getTime();
+      const endA = new Date(startA + a.eventDetails.duration * 60000).getTime();
+      const endB = new Date(startB + b.eventDetails.duration * 60000).getTime();
+
+      if (startA === startB) {
+        return endA - endB;
+      }
+      return startA - startB;
     });
   }
 }
