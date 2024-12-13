@@ -4,10 +4,13 @@ import AnimatedCarousel from '@/components/ui/AnimatedCarousel';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import EventModal from '@/components/EventModal';
+import PurchaseModal from '@/components/PurchaseModal';
+
 export default function Billeterie() {
   const colorScheme = useColorScheme();
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [purchaseModalVisible, setPurchaseModalVisible] = useState(false);
+  
   const carouselItems = [
     <View
       key="1"
@@ -65,9 +68,13 @@ export default function Billeterie() {
       }}
     >
       <EventModal
-            visible={modalVisible}
-            onClose={() => setModalVisible(false)}
-          />
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
+      <PurchaseModal
+        visible={purchaseModalVisible}
+        onClose={() => setPurchaseModalVisible(false)}
+      />
       <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
           <View style={styles.logoContainer}>
@@ -169,6 +176,7 @@ export default function Billeterie() {
                     paddingHorizontal: 32,
                     borderRadius: 25,
                   }}
+                  onPress={() => setPurchaseModalVisible(true)}
                 >
                   <View>
                     <Text style={{ fontSize: 10, fontWeight: 'bold', color: Colors[colorScheme ?? 'light'].headerText }}>

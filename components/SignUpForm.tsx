@@ -23,6 +23,8 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
     const [email, setEmail] = useState('');
     const [firstname, setFirstname] = useState('');
     const [psw, setPsw] = useState('');
+    const [pass, setPass] = useState('');
+    const [program, setProgram] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isFormVisible, setIsFormVisible] = useState(false);
 
@@ -144,6 +146,58 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
                     await AsyncStorage.setItem('name', userData.user.lastname);
                     await AsyncStorage.setItem('email', email);
                     await AsyncStorage.setItem('firstname', userData.user.firstname);
+                    console.log("email:", email);
+
+                    const userId = await fetch(`https://feffs.elioooooo.fr/user/get`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            "email": email,
+                        }),
+                    }).then((response) => response.json())
+                    .then((data) => {
+                        console.log("userId:", data.userId);
+                        return data.userId;
+                    });
+
+                    const userProgramResponse = await fetch(`https://feffs.elioooooo.fr/program/get`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            "userId": userId,
+                        }),
+                    });
+
+                    const userProgram = await userProgramResponse.json();
+
+                    if (userProgramResponse.status === 200) {
+                        await AsyncStorage.setItem('program', JSON.stringify(userProgram));
+                        setProgram(userProgram);
+                        console.log("Programme:", userProgram);
+                    }
+
+                    const userPassResponse = await fetch(`https://feffs.elioooooo.fr/pass/get`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            "email": email,
+                        }),
+                    });
+
+                    const userPass = await userPassResponse.json();
+
+                    if (userPassResponse.status === 200) {
+                        await AsyncStorage.setItem('pass', JSON.stringify(userPass));
+                        setPass(userPass);
+                        console.log("Pass:", userPass);
+                    }
+
                     onLogin();
                     setError(null);
                 } else {
