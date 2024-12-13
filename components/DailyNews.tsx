@@ -47,13 +47,8 @@ const DailyNews = () => {
     };
 
     return (
-        <View>
-            <Text
-                style={[
-                    styles.header,
-                    { color: Colors[colorScheme ?? 'light'].headerText },
-                ]}
-            >
+        <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
+            <Text style={[ styles.header,{ color: Colors[colorScheme ?? 'light'].headerText },]}>
                 Programme Journalier
             </Text>
             <View style={styles.buttonContainer}>
@@ -128,7 +123,10 @@ export default DailyNews;
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginHorizontal: 10,
     },
     header: {
         fontSize: 20,
@@ -153,7 +151,7 @@ const styles = StyleSheet.create({
     carouselContainer: {
         marginTop: 20,
         marginHorizontal: 20,
-        width: width - 40,
+        width: width - 60,
         alignItems: 'center',
     },
 });

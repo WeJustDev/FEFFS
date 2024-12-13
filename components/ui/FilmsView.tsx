@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     filmBox: {
-        width: 175,
+        width: 165,
         height: 80,
         borderRadius: 10,
         alignItems: 'center',

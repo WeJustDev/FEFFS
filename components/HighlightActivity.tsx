@@ -44,6 +44,7 @@ export default HighlightActivity;
 const styles = StyleSheet.create({
     container: {
         marginTop: 20,
+        marginBottom: 60,
         height: 250,
         marginHorizontal: 20,
         borderRadius: 10,

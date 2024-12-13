@@ -47,10 +47,10 @@ const ProgCarousel: React.FC<ProgCarouselProps> = ({ items }) => {
               resizeMode="cover"
             />
             <View style={styles.overlay}>
-              <Text style={[styles.cardTitle, { color: colors.headerText }]}>
+              <Text style={styles.cardTitle}>
                 {item.title}
               </Text>
-              <Text style={[styles.cardDescription, { color: colors.text }]}>
+              <Text style={styles.cardDescription}>
                 {item.description}
               </Text>
               <Text style={[styles.cardDate, { color: colors.dateTagText }]}>
@@ -113,10 +113,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: 'white',
   },
   cardDescription: {
     fontSize: 14,
     marginBottom: 5,
+    color: 'white',
   },
   cardDate: {
     fontSize: 12,
