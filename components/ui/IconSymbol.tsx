@@ -15,6 +15,8 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'warning.fill': 'warning',
   'location.fill': 'location-on',
+  'error.fill': 'error',
+  'checkmark': 'check',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],
