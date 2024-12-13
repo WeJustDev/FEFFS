@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   indicatorContainer: {
     flexDirection: 'row',
     alignSelf: 'center',
-    marginTop: -2,
+    marginTop: 4,
   },
   indicator: {
     width: 5,

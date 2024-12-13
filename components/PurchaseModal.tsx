@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal, ScrollView, Alert } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Picker } from '@react-native-picker/picker';
 import { ImgPicker } from './ImagePicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type PurchaseModalProps = {
   visible: boolean;
   onClose: () => void;
+  onPassGenerated?: (pass: any) => void; 
 };
 
-const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
+const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassGenerated }) => {
   const colorScheme = useColorScheme();
+  const [base64Image, setBase64Image] = useState<string | null>(null);
   const [imageSelected, setImageSelected] = useState<boolean>(false);
   const [prenom, setPrenom] = useState('');
   const [nom, setNom] = useState('');
@@ -26,6 +29,11 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
   const isFormComplete = prenom && nom && email && day && month && year && imageSelected;
 
   const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const resetForm = () => {
     setImageSelected(false);
     setDay('');
     setMonth('');
@@ -33,19 +41,60 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
     setEmail('');
     setNom('');
     setPrenom('');
-    onClose();
+    setBase64Image(null);
   };
 
-  const handleSubmit = () => {
-    const dateNaissance = `${day}/${month}/${year}`;
-    console.log('Proceeding to payment...');
-    console.log('Prenom:', prenom);
-    console.log('Nom:', nom);
-    console.log('Email:', email);
-    console.log('Date de naissance:', dateNaissance);
-    console.log('Image selected:', imageSelected);
-    // Réinitialisez les champs si nécessaire
-    handleClose();
+  const handleSubmit = async () => {
+    if (!isFormComplete) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      return;
+    }
+
+    try {
+      // Prepare date of birth in the format YYYY-MM-DD
+      const dateNaissance = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+      const response = await fetch("https://feffs.elioooooo.fr/pass/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lastname: nom,
+          firstname: prenom,
+          email: email,
+          birthdate: dateNaissance,
+          image: base64Image,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la création du pass');
+      }
+
+      const passData = await response.json();
+
+      // Store pass data in AsyncStorage
+      await AsyncStorage.setItem("pass", JSON.stringify(passData));
+      await AsyncStorage.setItem("name", nom);
+      await AsyncStorage.setItem("firstname", prenom);
+      await AsyncStorage.setItem("email", email);
+      await AsyncStorage.setItem("birthdate", dateNaissance);
+      await AsyncStorage.setItem("image", base64Image || '');
+
+      // Optional callback to parent component
+      if (onPassGenerated) {
+        onPassGenerated(passData);
+      }
+
+      // Reset form and close modal
+      resetForm();
+      onClose();
+
+    } catch (error) {
+      console.error("Erreur de génération du pass:", error);
+      Alert.alert('Erreur', 'Impossible de générer le pass. Veuillez réessayer.');
+    }
   };
 
   return (
@@ -75,7 +124,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
         </View>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
 
-          <ImgPicker onImageSelected={(uri) => setImageSelected(!!uri)} />
+          <ImgPicker onImageSelected={(base64) => {
+            setImageSelected(!!base64);
+            setBase64Image(base64);
+          }} />
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
@@ -120,54 +172,54 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
           </View>
 
           <View style={styles.inputContainer}>
-      <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-        Date de naissance :
-      </Text>
-      <View style={styles.datePickerContainer}>
-        {/* Picker pour le jour */}
-        <Picker
-          selectedValue={day}
-          onValueChange={(value: string) => setDay(value)}
-          style={styles.picker}
-          itemStyle={styles.pickerItem} // Ajoutez ceci
-          mode="dropdown" // Optionnel : pour un style cohérent
-        >
-          <Picker.Item label="Jour" value="" />
-          {[...Array(31)].map((_, i: number) => (
-            <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
-          ))}
-        </Picker>
+            <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              Date de naissance :
+            </Text>
+            <View style={styles.datePickerContainer}>
+              {/* Picker pour le jour */}
+              <Picker
+                selectedValue={day}
+                onValueChange={(value: string) => setDay(value)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem} // Ajoutez ceci
+                mode="dropdown" // Optionnel : pour un style cohérent
+              >
+                <Picker.Item label="Jour" value="" />
+                {[...Array(31)].map((_, i: number) => (
+                  <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
+                ))}
+              </Picker>
 
-        {/* Picker pour le mois */}
-        <Picker
-          selectedValue={month}
-          onValueChange={(value: string) => setMonth(value)}
-          style={styles.picker}
-          itemStyle={styles.pickerItem} // Ajoutez ceci
-          mode="dropdown" // Optionnel
-        >
-          <Picker.Item label="Mois" value="" />
-          {[...Array(12)].map((_, i) => (
-            <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
-          ))}
-        </Picker>
+              {/* Picker pour le mois */}
+              <Picker
+                selectedValue={month}
+                onValueChange={(value: string) => setMonth(value)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem} // Ajoutez ceci
+                mode="dropdown" // Optionnel
+              >
+                <Picker.Item label="Mois" value="" />
+                {[...Array(12)].map((_, i) => (
+                  <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
+                ))}
+              </Picker>
 
-        {/* Picker pour l'année */}
-        <Picker
-          selectedValue={year}
-          onValueChange={(value: string) => setYear(value)}
-          style={styles.picker}
-          itemStyle={styles.pickerItem} // Ajoutez ceci
-          mode="dropdown" // Optionnel
-        >
-          <Picker.Item label="Année" value="" />
-          {Array.from({ length: 100 }, (_, i: number) => {
-            const yr: number = new Date().getFullYear() - i;
-            return <Picker.Item key={yr} label={`${yr}`} value={`${yr}`} />;
-          })}
-        </Picker>
-      </View>
-    </View>
+              {/* Picker pour l'année */}
+              <Picker
+                selectedValue={year}
+                onValueChange={(value: string) => setYear(value)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem} // Ajoutez ceci
+                mode="dropdown" // Optionnel
+              >
+                <Picker.Item label="Année" value="" />
+                {Array.from({ length: 100 }, (_, i: number) => {
+                  const yr: number = new Date().getFullYear() - i;
+                  return <Picker.Item key={yr} label={`${yr}`} value={`${yr}`} />;
+                })}
+              </Picker>
+            </View>
+          </View>
 
           <View style={styles.passDetailsContainer}>
             <Text style={[styles.passDetailsTitle, { color: Colors[colorScheme ?? 'light'].headerText }]}>
@@ -202,37 +254,33 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
             </View>
           </View>
           <View style={[{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', width: "100%", gap: 10 }]}>
-            <TouchableOpacity
-              style={[styles.cancelButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
-              onPress={handleClose}
-            >
-              <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Annuler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              disabled={!isFormComplete}
-              style={[
-                styles.paymentButton,
-                {
-                  backgroundColor: isFormComplete
-                    ? Colors[colorScheme ?? 'light'].button
-                    : Colors[colorScheme ?? 'light'].cardDarkBg,
-                },
-              ]}
-              onPress={() => {
-                if (isFormComplete) {
-                  handleSubmit();
-                }
-              }}
-            >
-              <Text style={{
-                color: isFormComplete
-                  ? Colors[colorScheme ?? 'light'].headerText
-                  : 'gray'
-              }}>
-                Passer au paiement
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.cancelButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
+            onPress={handleClose}
+          >
+            <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Annuler</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            disabled={!isFormComplete}
+            style={[
+              styles.paymentButton,
+              {
+                backgroundColor: isFormComplete
+                  ? Colors[colorScheme ?? 'light'].button
+                  : Colors[colorScheme ?? 'light'].cardDarkBg,
+              },
+            ]}
+            onPress={handleSubmit}
+          >
+            <Text style={{
+              color: isFormComplete
+                ? Colors[colorScheme ?? 'light'].headerText
+                : 'gray'
+            }}>
+              Passer au paiement
+            </Text>
+          </TouchableOpacity>
+        </View>
           <View style={styles.legalSection}>
             <Text style={[styles.legalText, { color: Colors[colorScheme ?? 'light'].headerText }]}>
               Vos informations personnelles seront utilisées uniquement dans le cadre de l'achat de votre pass et ne seront pas partagées avec des tiers sans votre consentement explicite.
@@ -247,7 +295,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    paddingTop: 40,
     paddingHorizontal: 25,
     backgroundColor: Colors.light.pageBg, // Ensure consistent background
   },
