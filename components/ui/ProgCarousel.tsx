@@ -45,15 +45,20 @@ const ProgCarousel: React.FC<ProgCarouselProps> = ({ items }) => {
               source={item.image}
               style={styles.cardImage}
               resizeMode="cover"
+              accessible={true}
+              accessibilityLabel={`Image de ${item.title}`}
             />
             <View style={styles.overlay}>
-              <Text style={styles.cardTitle}>
+              <Text style={styles.cardTitle} accessible={true}
+                accessibilityRole="header">
                 {item.title}
               </Text>
-              <Text style={styles.cardDescription}>
+              <Text style={styles.cardDescription} accessible={true}
+                accessibilityLabel={`Description : ${item.description}`}>
                 {item.description}
               </Text>
-              <Text style={[styles.cardDate, { color: colors.dateTagText }]}>
+              <Text style={[styles.cardDate, { color: colors.dateTagText }]} accessible={true}
+                accessibilityLabel={`Date : ${item.date}`}>
                 {item.date}
               </Text>
             </View>
@@ -71,6 +76,8 @@ const ProgCarousel: React.FC<ProgCarouselProps> = ({ items }) => {
                 ? { backgroundColor: colors.tabIconSelected }
                 : null,
             ]}
+            accessible={true}
+            accessibilityLabel={`Indicateur carousel numéro  ${index + 1} ${index === currentIndex ? 'actif' : ''}`}
           />
         ))}
       </View>
