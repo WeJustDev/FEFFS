@@ -204,10 +204,11 @@ export default function Planning() {
                   position: "absolute",
                   top: 0,
                   right: 0,
-                  width: 10,
-                  height: 10,
-                  borderRadius: 5,
-                  backgroundColor: Colors[colorScheme ?? "light"].dateTagText,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 100,
+                  borderWidth: 2,
+                  borderColor: Colors[colorScheme ?? "light"].dateTagText,
                 }}
               />
             )}
