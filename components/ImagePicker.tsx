@@ -31,6 +31,9 @@ export function ImgPicker({ onImageSelected }: ImgPickerProps) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.imageContainer}>
+        {image && <Image source={{ uri: image }} style={styles.image} />}
+      </View>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}
         onPress={pickImage}
@@ -39,9 +42,6 @@ export function ImgPicker({ onImageSelected }: ImgPickerProps) {
           Charger une image de votre tête
         </Text>
       </TouchableOpacity>
-      <View style={styles.imageContainer}>
-        {image && <Image source={{ uri: image }} style={styles.image} />}
-      </View>
     </View>
   );
 }
@@ -50,12 +50,13 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
   button: {
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 25,
-    marginBottom: 10,
+    marginTop: 10,
   },
   buttonText: {
     fontSize: 14,
