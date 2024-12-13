@@ -51,9 +51,11 @@ export default function Planning() {
 
   const fetchProg = async () => {
     const storedProg = await AsyncStorage.getItem("program");
+    console.log(storedProg);
     if (storedProg) {
       const parsedProg = JSON.parse(storedProg);
       setProg(parsedProg);
+      console.log(parsedProg);
       setShowtimes(parsedProg.events);
     }
   };
