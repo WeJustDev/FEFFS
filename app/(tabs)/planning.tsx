@@ -49,6 +49,10 @@ export default function Planning() {
   const [updatedShowtimes, setUpdatedShowtimes] = useState<any[]>([]);
   const [refresh, setRefresh] = useState(0);
 
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<boolean>(false);
+
   const fetchProg = async () => {
     const storedProg = await AsyncStorage.getItem("program");
     console.log(storedProg);
@@ -113,6 +117,16 @@ export default function Planning() {
       fetchShowtimes();
     }
   }, [prog]);
+
+  useEffect(() => {
+    if(error && hasError) {
+      setNotification(true);
+      setTimeout(() => {
+        setError(null);
+        setNotification(false);
+      }, 3000);
+    }
+  }, [error]);
 
   const handleDelete = async (eventId: string) => {
     console.log("eventId:", eventId);
@@ -182,17 +196,17 @@ export default function Planning() {
         console.log("Remove event status:", removeEventResponse.status);
 
         if (removeEventResponse.status === 200) {
-          // setError("Évènement retiré du programme avec succès");
+          setError("Évènement retiré du programme avec succès");
         } else {
-          // setError("Erreur : Lors de l'enlèvement de l'évènement du programme");
+          setError("Erreur : Lors de l'enlèvement de l'évènement du programme");
         }
       } else {
-        // setError("Erreur : Programme utilisateur introuvable");
+        setError("Erreur : Programme utilisateur introuvable");
       }
     } else {
-      // setError( "Erreur : Vous devez être connecté pour retirer un évènement de votre programme");
+      setError( "Erreur : Vous devez être connecté pour retirer un évènement de votre programme");
     }
-    // setHasError(true);
+    setHasError(true);
     setRefresh(refresh + 1);
   };
 
@@ -227,6 +241,94 @@ export default function Planning() {
 
   return (
     <>
+          {notification && (
+        <View style={{ width: "100%", padding: 10, position: "absolute" }}>
+          <View
+            style={[
+              styles.notification,
+              {
+                zIndex: 20,
+                backgroundColor: Colors[colorScheme ?? "light"].background,
+              },
+            ]}
+          >
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                width: "100%",
+                gap: 20,
+                flex: 1,
+              }}
+            >
+              <View style={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
+                {error && error.startsWith("Erreur") ? (
+                  <Text
+                    style={[
+                      styles.message,
+                      { color: Colors[colorScheme ?? "light"].texterror, flex: 1 },
+                    ]}
+                  >
+                    Erreur...
+                  </Text>
+                ) : (
+                  <Text
+                    style={[
+                      styles.message,
+                      { color: Colors[colorScheme ?? "light"].textsuccess, flex: 1 },
+                    ]}
+                  >
+                    Succès !
+                  </Text>
+                )}
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: 5,
+                    flex: 1,
+                  }}
+                >
+                  {error && error.startsWith("Erreur") ? (
+                    <IconSymbol
+                      name="error.fill"
+                      size={16}
+                      color={Colors[colorScheme ?? "light"].texterror}
+                    />
+                  ) : (
+                    <IconSymbol
+                      name="checkmark"
+                      size={16}
+                      color={Colors[colorScheme ?? "light"].textsuccess}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.message,
+                      { color: Colors[colorScheme ?? "light"].text, flex: 1, textAlign: "left" },
+                    ]}
+                  >
+                    {error}
+                  </Text>
+                </View>
+              </View>
+              <Pressable onPress={() => setNotification(false)}>
+                <Text
+                  style={[ 
+                    styles.message,
+                    { color: Colors[colorScheme ?? "light"].text },
+                  ]}
+                >
+                  ✖
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
       <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
         <View
           style={{
@@ -390,6 +492,7 @@ export default function Planning() {
                       borderRadius: 4,
                       display: "flex",
                       flexDirection: "row",
+                      alignItems: "center",
                       gap: 4,
                     }}
                   >
@@ -553,5 +656,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 20,
     fontWeight: "bold",
+  },
+  notification: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    padding: 10,
+    width: "95%",
+    borderRadius: 5,
+    left: 0,
+    marginTop: 50,
+    marginLeft: "auto",
+    marginRight: "auto",
+    zIndex: 20,
+  },
+  message: {
+    textAlign: "center",
+    paddingBottom: 10,
+  },
+  button: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 5,
+    alignSelf: "center",
+    width: "auto",
   },
 });
