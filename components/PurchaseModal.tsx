@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal, ScrollView } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Picker } from '@react-native-picker/picker';
 import { ImgPicker } from './ImagePicker';
 
 type PurchaseModalProps = {
@@ -11,11 +12,42 @@ type PurchaseModalProps = {
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
   const colorScheme = useColorScheme();
-  const [imageSelected, setImageSelected] = useState<boolean>(false); // Track if an image is selected
+  const [imageSelected, setImageSelected] = useState<boolean>(false);
+  const [prenom, setPrenom] = useState('');
+  const [nom, setNom] = useState('');
+  const [email, setEmail] = useState('');
+
+  // Ajoutez les états pour le jour, le mois et l'année
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
+
+  // Mettez à jour isFormComplete
+  const isFormComplete = prenom && nom && email && day && month && year && imageSelected;
+
   const handleClose = () => {
     setImageSelected(false);
+    setDay('');
+    setMonth('');
+    setYear('');
+    setEmail('');
+    setNom('');
+    setPrenom('');
     onClose();
   };
+
+  const handleSubmit = () => {
+    const dateNaissance = `${day}/${month}/${year}`;
+    console.log('Proceeding to payment...');
+    console.log('Prenom:', prenom);
+    console.log('Nom:', nom);
+    console.log('Email:', email);
+    console.log('Date de naissance:', dateNaissance);
+    console.log('Image selected:', imageSelected);
+    // Réinitialisez les champs si nécessaire
+    handleClose();
+  };
+
   return (
     <Modal
       transparent={false}
@@ -23,7 +55,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
       onRequestClose={onClose}
     >
       <View style={[styles.modalContainer, { backgroundColor: Colors[colorScheme ?? 'light'].pageBg }]}>
-      <View style={{ marginTop: 16, marginBottom: 12, paddingHorizontal: 20 }}>
+        <View style={{ marginTop: 16, marginBottom: 12, paddingHorizontal: 20 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
             <View style={styles.logoContainer}>
               <Image
@@ -42,28 +74,101 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
           </View>
         </View>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
-          <View>
-            <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-            </Text>
-            <View style={styles.infoContainer}>
-              <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                Nom :
-              </Text>
-              <Text style={[styles.info, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                Exemple Nom
-              </Text>
-            </View>
 
-            <View style={styles.infoContainer}>
-              <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                Email :
-              </Text>
-              <Text style={[styles.info, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                exemple.email@example.com
-              </Text>
-            </View>
-            <ImgPicker onImageSelected={(uri) => setImageSelected(!!uri)} />
+          <ImgPicker onImageSelected={(uri) => setImageSelected(!!uri)} />
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              Prénom :
+            </Text>
+            <TextInput
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].headerText }]}
+              value={prenom}
+              onChangeText={setPrenom}
+              placeholder="Entrez votre prénom"
+              placeholderTextColor={Colors[colorScheme ?? 'light'].placeholderText}
+            />
           </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              Nom :
+            </Text>
+            <TextInput
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].headerText }]}
+              value={nom}
+              onChangeText={setNom}
+              placeholder="Entrez votre nom"
+              placeholderTextColor={Colors[colorScheme ?? 'light'].placeholderText}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              Email :
+            </Text>
+            <TextInput
+              style={[styles.input, { color: Colors[colorScheme ?? 'light'].headerText }]}
+              value={email}
+              onChangeText={setEmail}
+              inputMode='email'
+              placeholder="Entrez votre email"
+              placeholderTextColor={Colors[colorScheme ?? 'light'].placeholderText}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+      <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+        Date de naissance :
+      </Text>
+      <View style={styles.datePickerContainer}>
+        {/* Picker pour le jour */}
+        <Picker
+          selectedValue={day}
+          onValueChange={(value: string) => setDay(value)}
+          style={styles.picker}
+          itemStyle={styles.pickerItem} // Ajoutez ceci
+          mode="dropdown" // Optionnel : pour un style cohérent
+        >
+          <Picker.Item label="Jour" value="" />
+          {[...Array(31)].map((_, i: number) => (
+            <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
+          ))}
+        </Picker>
+
+        {/* Picker pour le mois */}
+        <Picker
+          selectedValue={month}
+          onValueChange={(value: string) => setMonth(value)}
+          style={styles.picker}
+          itemStyle={styles.pickerItem} // Ajoutez ceci
+          mode="dropdown" // Optionnel
+        >
+          <Picker.Item label="Mois" value="" />
+          {[...Array(12)].map((_, i) => (
+            <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
+          ))}
+        </Picker>
+
+        {/* Picker pour l'année */}
+        <Picker
+          selectedValue={year}
+          onValueChange={(value: string) => setYear(value)}
+          style={styles.picker}
+          itemStyle={styles.pickerItem} // Ajoutez ceci
+          mode="dropdown" // Optionnel
+        >
+          <Picker.Item label="Année" value="" />
+          {Array.from({ length: 100 }, (_, i: number) => {
+            const yr: number = new Date().getFullYear() - i;
+            return <Picker.Item key={yr} label={`${yr}`} value={`${yr}`} />;
+          })}
+        </Picker>
+      </View>
+    </View>
+
           <View style={styles.passDetailsContainer}>
             <Text style={[styles.passDetailsTitle, { color: Colors[colorScheme ?? 'light'].headerText }]}>
               Détails du Pass Festival
@@ -96,7 +201,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
               </Text>
             </View>
           </View>
-          <View style={[{ flexDirection: 'row', justifyContent: 'flex-end', alignItems:'flex-end', width: "100%", gap: 10 }]}>
+          <View style={[{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', width: "100%", gap: 10 }]}>
             <TouchableOpacity
               style={[styles.cancelButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
               onPress={handleClose}
@@ -104,27 +209,26 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
               <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Annuler</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              disabled={!imageSelected} // Disable if no image is selected
+              disabled={!isFormComplete}
               style={[
                 styles.paymentButton,
-                { 
-                  backgroundColor: imageSelected
+                {
+                  backgroundColor: isFormComplete
                     ? Colors[colorScheme ?? 'light'].button
                     : Colors[colorScheme ?? 'light'].cardDarkBg,
                 },
               ]}
               onPress={() => {
-                if (imageSelected) {
-                  console.log('Proceeding to payment...');
-                  onClose();
+                if (isFormComplete) {
+                  handleSubmit();
                 }
               }}
             >
-              <Text style={{ color: imageSelected
-                ? Colors[colorScheme ?? 'light'].headerText
-                : 'gray'
-
-               }}>
+              <Text style={{
+                color: isFormComplete
+                  ? Colors[colorScheme ?? 'light'].headerText
+                  : 'gray'
+              }}>
                 Passer au paiement
               </Text>
             </TouchableOpacity>
@@ -141,12 +245,42 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
 };
 
 const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    paddingTop: 40,
+    paddingHorizontal: 25,
+    backgroundColor: Colors.light.pageBg, // Ensure consistent background
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 25,
+    paddingHorizontal: 10,
+  },
   logoContainer: {
     height: 40,
     width: 40,
     borderRadius: 20,
     marginRight: 12,
     boxShadow: '0px 0px 80px rgba(255, 255, 255, 1)',
+  },
+  datePickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  picker: {
+    color: 'white',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    flex: 1,
+    height: 50,
+    marginHorizontal: 5,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  pickerItem: {
+    fontSize: 16,
+    height: 44, // Hauteur de chaque item
   },
   logo: {
     width: '100%',
@@ -163,88 +297,91 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: 'bold',
   },
-  modalContainer: {
-    flex: 1,
-    padding: 20,
-  },
   scrollViewContent: {
     flexGrow: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingBottom: 30,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  infoContainer: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    justifyContent: 'flex-start',
+  inputContainer: {
+    marginBottom: 5,
   },
   label: {
     fontSize: 14,
-    fontWeight: 'bold',
-    marginRight: 10,
+    fontWeight: '500',
+    marginBottom: 2,
   },
-  info: {
-    fontSize: 14,
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 0,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   passDetailsContainer: {
-    minWidth: '100%',
-    marginTop: 20,
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 15,
+    padding: 20,
+    marginTop: 15,
+    marginBottom: 25,
     borderWidth: 1,
-    borderColor: '#555',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   passDetailsTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 15,
     textAlign: 'center',
+    marginBottom: 20,
   },
   passDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   passDetailLabel: {
     fontSize: 16,
   },
   passDetailValue: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
   },
   cancelButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    flex: 1,
+    marginRight: 10,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  paymentButton: {
+    flex: 2,
+    paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
   },
   legalSection: {
-    marginTop: 20,
-    padding: 15,
+    marginTop: 25,
+    paddingTop: 20,
     borderTopWidth: 1,
-    borderColor: '#555',
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   legalText: {
     fontSize: 12,
     textAlign: 'center',
-  },
-  disabledButton: {
-    backgroundColor: 'gray',
-  },
-  disableButtonText: {
-    color: 'rgba(255, 255, 255, 0.5)',
-  },
-  paymentButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: 'center',
+    lineHeight: 18,
   },
 });
 
