@@ -252,7 +252,7 @@ export default function Pass() {
                 gap: 10,
               }}
             >
-              <View
+                <View
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -260,25 +260,25 @@ export default function Pass() {
                   flex: 1,
                   gap: 10,
                 }}
-              >
+                >
                 <Image
-                  style={{ width: 100, height: 100 }}
+                  style={{ width: "35%", aspectRatio: 1, borderRadius: 5 }}
                   source={{ uri: pass.image }}
                 />
                 <View
-                  style={{  display: "flex", flexDirection: "column", gap: 5, justifyContent: 'space-around' }}
+                  style={{ display: "flex", flexDirection: "column", gap: 5, justifyContent: 'space-around' }}
                 >
-                  <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-                    {pass.lastname} {pass.firstname}
+                  <Text style={{ color: Colors[colorScheme ?? "light"].text, fontWeight: "bold" }}>
+                  {pass.lastname} {pass.firstname}
                   </Text>
                   <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-                    {pass.email}
+                  {pass.email}
                   </Text>
                   <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-                    né le {new Date(pass.birthdate).toDateString()}
+                    Né le {new Date(pass.birthdate).toLocaleDateString("fr-FR")}
                   </Text>
                 </View>
-              </View>
+                </View>
             </View>
 
             <Pressable
