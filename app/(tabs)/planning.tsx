@@ -46,6 +46,8 @@ export default function Planning() {
   const [showtimes, setShowtimes] = useState<string[]>([]);
   const [updatedShowtimes, setUpdatedShowtimes] = useState<any[]>([]);
 
+  const [refresh, setRefresh] = useState(0);
+
   useEffect(() => {
     const fetchProg = async () => {
       const storedProg = await AsyncStorage.getItem("program");
@@ -57,36 +59,43 @@ export default function Planning() {
     fetchProg();
   }, []);
 
-  useEffect(() => {
-    const fetchShowtimes = async () => {
-      const newShowtimes = [];
-      for (let index = 0; index < showtimes.length; index++) {
-        let showtimeId = showtimes[index];
-        let showtime = await fetch(
-          `https://feffs.elioooooo.fr/showtime/get/${showtimeId}`
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            return data;
-          });
-
-        // Fetch event details
-        let event = await fetch(
-          `https://feffs.elioooooo.fr/event/get/${showtime.event}`
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            return data;
-          });
-
-        // Add event details to showtime
-        showtime.eventDetails = event;
-        newShowtimes.push(showtime);
-      }
-      setUpdatedShowtimes(newShowtimes);
-    };
-    fetchShowtimes();
-  }, [showtimes]);
+    useEffect(() => {
+      const fetchShowtimes = async () => {
+        if (prog) {
+          try {
+            const response = await fetch(
+              `https://feffs.elioooooo.fr/program/get/${prog.userId}`
+            );
+            const data = await response.json();
+            const programData = data[0];
+    
+            if (programData && programData.events && Array.isArray(programData.events)) {
+              const newShowtimes = [];
+              for (let index = 0; index < programData.events.length; index++) {
+                let showtimeId = programData.events[index];
+                let showtime = await fetch(
+                  `https://feffs.elioooooo.fr/showtime/get/${showtimeId}`
+                ).then((response) => response.json());
+    
+                let event = await fetch(
+                  `https://feffs.elioooooo.fr/event/get/${showtime.event}`
+                ).then((response) => response.json());
+    
+                showtime.eventDetails = event;
+                newShowtimes.push(showtime);
+              }
+              setUpdatedShowtimes(newShowtimes);
+            } else {
+              console.error("Invalid data format: events is not an array or is undefined");
+            }
+          } catch (error) {
+            console.error("Error fetching showtimes:", error);
+          }
+        }
+      };
+    
+      fetchShowtimes();
+    }, [prog, refresh]);
 
   const [selectedDay, setSelectedDay] = useState(
     days.find((day) => day.startsWith(currentDay.toString())) || days[0]
@@ -105,10 +114,14 @@ export default function Planning() {
 
   const filteredShowtimes = filterShowtimesByDay(updatedShowtimes, selectedDay);
 
-  const hasEventsForDay = (day) => {
-    return updatedShowtimes.some((showtime) => {
+  const hasEventsForDay = (day: string): boolean => {
+    return updatedShowtimes.some((showtime: Showtime) => {
       const showtimeDate = new Date(showtime.date);
-      const showtimeDay = `${showtimeDate.getDate()}-${(showtimeDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      const showtimeDay = `${showtimeDate.getDate()}-${(
+        showtimeDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}`;
       return showtimeDay === day;
     });
   };
@@ -262,7 +275,9 @@ export default function Planning() {
                     color={Colors[colorScheme ?? "light"].textsecondary}
                   />
                   <Text
-                    style={{ color: Colors[colorScheme ?? "light"].textsecondary }}
+                    style={{
+                      color: Colors[colorScheme ?? "light"].textsecondary,
+                    }}
                   >
                     {showtime.localisation}
                   </Text>
@@ -270,8 +285,7 @@ export default function Planning() {
                 {showtime.overlap && (
                   <View
                     style={{
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"].dateTagBg,
+                      backgroundColor: Colors[colorScheme ?? "light"].dateTagBg,
                       padding: 2,
                       borderRadius: 4,
                       display: "flex",
@@ -302,11 +316,22 @@ export default function Planning() {
               Aucun événement programmé pour ce jour.
             </Text>
             <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-              La programmation des évènements se fait depuis l'onglet Evènements.
+              La programmation des évènements se fait depuis l'onglet
+              Evènements.
             </Text>
           </View>
         )}
       </ScrollView>
+      <Pressable
+        style={styles.floatingButton}
+        onPress={() => setRefresh((oldKey) => oldKey + 1)}
+      >
+        <IconSymbol
+          name="arrow.clockwise"
+          size={24}
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </Pressable>
     </>
   );
 
@@ -325,7 +350,11 @@ export default function Planning() {
   function filterShowtimesByDay(showtimes, selectedDay) {
     return showtimes.filter((showtime) => {
       const showtimeDate = new Date(showtime.date);
-      const showtimeDay = `${showtimeDate.getDate()}-${(showtimeDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      const showtimeDay = `${showtimeDate.getDate()}-${(
+        showtimeDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}`;
       return showtimeDay === selectedDay;
     });
   }
@@ -353,5 +382,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 20,
     fontWeight: "bold",
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: Colors.light.icon,
+    borderRadius: 50,
+    width: 60,
+    height: 60,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
   },
 });
