@@ -6,11 +6,12 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 let days = [
   "20-09",
@@ -45,57 +46,64 @@ export default function Planning() {
   const [prog, setProg] = useState<Program | null>(null);
   const [showtimes, setShowtimes] = useState<string[]>([]);
   const [updatedShowtimes, setUpdatedShowtimes] = useState<any[]>([]);
-
   const [refresh, setRefresh] = useState(0);
 
-  useEffect(() => {
-    const fetchProg = async () => {
-      const storedProg = await AsyncStorage.getItem("program");
-      if (storedProg) {
-        setProg(JSON.parse(storedProg));
-        setShowtimes(JSON.parse(storedProg).events);
-      }
-    };
-    fetchProg();
-  }, []);
+  const fetchProg = async () => {
+    const storedProg = await AsyncStorage.getItem("program");
+    if (storedProg) {
+      const parsedProg = JSON.parse(storedProg);
+      setProg(parsedProg);
+      setShowtimes(parsedProg.events);
+    }
+  };
 
-  useEffect(() => {
-    const fetchShowtimes = async () => {
-      if (prog) {
-        try {
-          const response = await fetch(
-            `https://feffs.elioooooo.fr/program/get/${prog.userId}`
-          );
-          const data = await response.json();
-          const programData = data[0];
+  const fetchShowtimes = async () => {
+    console.log("- Fetching showtimes");
+    console.log("Prog:", prog);
+    if (prog) {
+      try {
+        const response = await fetch(
+          `https://feffs.elioooooo.fr/program/get/${prog.userId}`
+        );
+        const data = await response.json();
+        const programData = data[0];
 
-          if (programData && programData.events && Array.isArray(programData.events)) {
-            const newShowtimes = [];
-            for (let index = 0; index < programData.events.length; index++) {
-              let showtimeId = programData.events[index];
-              let showtime = await fetch(
-                `https://feffs.elioooooo.fr/showtime/get/${showtimeId}`
-              ).then((response) => response.json());
+        if (programData && programData.events && Array.isArray(programData.events)) {
+          const newShowtimes = [];
+          for (let index = 0; index < programData.events.length; index++) {
+            let showtimeId = programData.events[index];
+            let showtime = await fetch(
+              `https://feffs.elioooooo.fr/showtime/get/${showtimeId}`
+            ).then((response) => response.json());
 
-              let event = await fetch(
-                `https://feffs.elioooooo.fr/event/get/${showtime.event}`
-              ).then((response) => response.json());
+            let event = await fetch(
+              `https://feffs.elioooooo.fr/event/get/${showtime.event}`
+            ).then((response) => response.json());
 
-              showtime.eventDetails = event;
-              newShowtimes.push(showtime);
-            }
-            setUpdatedShowtimes(sortShowtimes(newShowtimes));
-          } else {
-            console.error("Invalid data format: events is not an array or is undefined");
+            showtime.eventDetails = event;
+            newShowtimes.push(showtime);
           }
-        } catch (error) {
-          console.error("Error fetching showtimes:", error);
+          setUpdatedShowtimes(sortShowtimes(newShowtimes));
+        } else {
+          console.error("Invalid data format: events is not an array or is undefined");
         }
+      } catch (error) {
+        console.error("Error fetching showtimes:", error);
       }
-    };
+    }
+  };
 
-    fetchShowtimes();
-  }, [prog, refresh]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProg();
+    }, [refresh])
+  );
+
+  useEffect(() => {
+    if (prog) {
+      fetchShowtimes();
+    }
+  }, [prog]);
 
   const [selectedDay, setSelectedDay] = useState(
     days.find((day) => day.startsWith(currentDay.toString())) || days[0]
@@ -114,14 +122,10 @@ export default function Planning() {
 
   const filteredShowtimes = filterShowtimesByDay(updatedShowtimes, selectedDay);
 
-  const hasEventsForDay = (day: string): boolean => {
-    return updatedShowtimes.some((showtime: Showtime) => {
+  const hasEventsForDay = (day) => {
+    return updatedShowtimes.some((showtime) => {
       const showtimeDate = new Date(showtime.date);
-      const showtimeDay = `${showtimeDate.getDate()}-${(
-        showtimeDate.getMonth() + 1
-      )
-        .toString()
-        .padStart(2, "0")}`;
+      const showtimeDay = `${showtimeDate.getDate()}-${(showtimeDate.getMonth() + 1).toString().padStart(2, '0')}`;
       return showtimeDay === day;
     });
   };
@@ -310,7 +314,7 @@ export default function Planning() {
             </View>
           ))
         ) : (
-          <View>
+          <View style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
               Aucun événement programmé pour ce jour.
             </Text>
@@ -320,16 +324,6 @@ export default function Planning() {
           </View>
         )}
       </ScrollView>
-      <Pressable
-        style={styles.floatingButton}
-        onPress={() => setRefresh((oldKey) => oldKey + 1)}
-      >
-        <IconSymbol
-          name="arrow.clockwise"
-          size={24}
-          color={Colors[colorScheme ?? "light"].text}
-        />
-      </Pressable>
     </>
   );
 
@@ -345,26 +339,15 @@ export default function Planning() {
     return `${endHours}:${endMinutes}`;
   }
 
-  function filterShowtimesByDay(showtimes: ShowtimeWithDetails[], selectedDay: string): ShowtimeWithDetails[] {
+  function filterShowtimesByDay(showtimes, selectedDay) {
     return showtimes.filter((showtime) => {
       const showtimeDate = new Date(showtime.date);
-      const showtimeDay = `${showtimeDate.getDate()}-${(
-        showtimeDate.getMonth() + 1
-      )
-        .toString()
-        .padStart(2, "0")}`;
+      const showtimeDay = `${showtimeDate.getDate()}-${(showtimeDate.getMonth() + 1).toString().padStart(2, '0')}`;
       return showtimeDay === selectedDay;
     });
   }
 
-  interface ShowtimeWithDetails extends Showtime {
-    eventDetails: {
-      title: string;
-      duration: number;
-    };
-  }
-
-  function sortShowtimes(showtimes: ShowtimeWithDetails[]): ShowtimeWithDetails[] {
+  function sortShowtimes(showtimes) {
     return showtimes.sort((a, b) => {
       const startA = new Date(a.date).getTime();
       const startB = new Date(b.date).getTime();
@@ -401,18 +384,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 20,
     fontWeight: "bold",
-  },
-  floatingButton: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: Colors.light.icon,
-    borderRadius: 50,
-    width: 60,
-    height: 60,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 5,
   },
 });
