@@ -211,50 +211,6 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
         }
     }
 
-    // Gérer l'importation du profil
-    const handleImportProfile = async () => {
-        console.log('handleImportProfile a été appelé');
-        try {
-            const result = await DocumentPicker.getDocumentAsync({
-                type: 'application/json',
-            });
-            console.log('Résultat du DocumentPicker :', result);
-
-            if (result.canceled) {
-                console.log("L'utilisateur a annulé la sélection du document.");
-                return;
-            }
-
-            if (result.assets && result.assets.length > 0) {
-                const uri = result.assets[0].uri;
-
-                const response = await fetch(uri);
-                const fileContent = await response.text();
-
-                const profile = JSON.parse(fileContent);
-                if (profile.name && profile.email) {
-                    setName(profile.name);
-                    setEmail(profile.email);
-                    console.log('Profil importé avec succès', profile.name, profile.email);
-
-                    // Enregistrer dans AsyncStorage
-                    await AsyncStorage.setItem('name', profile.name);
-                    await AsyncStorage.setItem('email', profile.email);
-
-                    // Appeler onLogin pour rediriger vers la page principale
-                    onLogin();
-                } else {
-                    setError('Le fichier ne contient pas de données valides.');
-                }
-            } else {
-                setError('Aucun fichier sélectionné.');
-            }
-        } catch (error) {
-            setError('Erreur lors de l\'importation du profil.');
-            console.error('Erreur lors de l\'importation du profil :', error);
-        }
-    };
-
     return (
       <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
         <View style={styles.topSection}>
@@ -285,11 +241,6 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
           <TouchableOpacity style={styles.importButton} onPress={() => { handleStart(); setFormType('signin'); }}>
             <Text style={styles.startButtonText}>Se connecter</Text>
           </TouchableOpacity>
-    
-          {/* Nouveau bouton "Importer mon profil" */}
-          {/* <TouchableOpacity style={styles.importButton} onPress={handleImportProfile}>
-            <Text style={styles.importButtonText}>Importer mon profil</Text>
-          </TouchableOpacity> */}
         </View>
     
         {/* Formulaire animé */}
