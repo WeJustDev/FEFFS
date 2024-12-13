@@ -23,7 +23,7 @@ const Header = ({ colorScheme }: { colorScheme: ColorScheme }) => {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={[styles.welcomeText, { color: Colors[colorScheme].text }]}>
+      <Text style={[styles.welcomeText, { color: Colors[colorScheme ?? 'light'].text }]}>
         Bienvenue sur l'app FEFFS
       </Text>
     </ImageBackground>
@@ -40,19 +40,18 @@ export default function Index() {
   const [psw, setPsw] = useState("");
   const [hasPass, setHasPass] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const colorScheme = useColorScheme() as ColorScheme;
 
   const handleLogin = () => {
     setIsLoggedIn(true);
   };
 
   useEffect(() => {
-      const checkUser = async () => {
+    const checkUser = async () => {
       try {
         const storedName = await AsyncStorage.getItem('name');
         const storedEmail = await AsyncStorage.getItem('email');
         const storedPass = await AsyncStorage.getItem('pass');
-    
+
         if (storedName && storedEmail) {
           setName(storedName);
           setEmail(storedEmail);
@@ -60,7 +59,7 @@ export default function Index() {
         } else {
           setIsLoggedIn(false);
         }
-    
+
         setHasPass(false);
       } catch (e) {
         setError('Erreur lors de la récupération des données utilisateur.');
@@ -69,7 +68,7 @@ export default function Index() {
     checkUser();
   }, [isLoggedIn]);
 
-    const handleLogout = async () => {
+  const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('name');
       await AsyncStorage.removeItem('email');
@@ -92,57 +91,57 @@ export default function Index() {
   if (isLoggedIn) {
     return (
       <ScrollView>
-        <View style={[styles.container, { backgroundColor: Colors[colorScheme].pageBg }]}>
-          <Header colorScheme={colorScheme} />
+        <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].pageBg }]}>
+          <Header colorScheme={colorScheme ?? 'light'} />
           <View style={styles.userInfoContainer}>
             <View
               style={[
                 styles.profileCircle,
-                { backgroundColor: Colors[colorScheme].cardDarkBg },
+                { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg },
               ]}
             >
-              <Text style={[styles.profileInitial, { color: Colors[colorScheme].text }]}>
+              <Text style={[styles.profileInitial, { color: Colors[colorScheme ?? 'light'].text }]}>
                 {name.charAt(0).toUpperCase()}
               </Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: Colors[colorScheme].headerText }]}>
+              <Text style={[styles.profileName, { color: Colors[colorScheme ?? 'light'].headerText }]}>
                 {name}
               </Text>
-              <Text style={[styles.profileEmail, { color: Colors[colorScheme].text }]}>
+              <Text style={[styles.profileEmail, { color: Colors[colorScheme ?? 'light'].text }]}>
                 {email}
               </Text>
             </View>
           </View>
-          <View style={[styles.accueil, { backgroundColor: Colors[colorScheme].pageBg }]}>
+          <View style={[styles.accueil, { backgroundColor: Colors[colorScheme ?? 'light'].pageBg }]}>
             <View style={{ padding: 16 }}>
-              <Text style={[styles.welcome, { color: Colors[colorScheme].headerText }]}>
+              <Text style={[styles.welcome, { color: Colors[colorScheme ?? 'light'].headerText }]}>
                 Bienvenue !
               </Text>
               {/* Vérification du passe utilisateur */}
-              <View style={[styles.passContainer, { backgroundColor: Colors[colorScheme].cardDarkBg }]}>
+              <View style={[styles.passContainer, { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
                 {hasPass ? (
                   <View style={styles.passContainerHas}>
-                    <Text style={{ color: Colors[colorScheme].headerText }}>Vous avez 1 passe actif</Text>
+                    <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Vous avez 1 passe actif</Text>
                     <TouchableOpacity
-                      style={[styles.viewPassButton, { backgroundColor: Colors[colorScheme].dateTagBg }]}
+                      style={[styles.viewPassButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}
                       onPress={() => console.log('Voir le passe')}
                     >
-                      <Text style={[styles.viewPassText, { color: Colors[colorScheme].dateTagText }]}>
+                      <Text style={[styles.viewPassText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
                         Voir
                       </Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
                   <View style={styles.noPassContainer}>
-                    <Text style={[styles.nopasstext, { color: Colors[colorScheme].text }]}>
+                    <Text style={[styles.nopasstext, { color: Colors[colorScheme ?? 'light'].text }]}>
                       Vous n'avez encore acheté aucun passe pour l'instant.
                     </Text>
                     <TouchableOpacity
-                      style={[styles.buyButton, { backgroundColor: Colors[colorScheme].dateTagBg }]}
+                      style={[styles.buyButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}
                       onPress={handleBuy}
                     >
-                      <Text style={[styles.buyButtonText, { color: Colors[colorScheme].dateTagText }]}>
+                      <Text style={[styles.buyButtonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
                         Acheter
                       </Text>
                     </TouchableOpacity>
@@ -153,15 +152,15 @@ export default function Index() {
             <DailyNews />
             {/* Ajout des boutons sous DailyNews */}
 
-              <TouchableOpacity
-                style={[styles.button,{backgroundColor: Colors[colorScheme].dateTagBg,borderColor: Colors[colorScheme].dateTagText,borderWidth: 1,},]}
-                onPress={handleLogout}>
-                <Text style={[styles.buttonText, { color: Colors[colorScheme].dateTagText }]}>
-                  Déconnexion
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg, borderColor: Colors[colorScheme ?? 'light'].dateTagText, borderWidth: 1, },]}
+              onPress={handleLogout}>
+              <Text style={[styles.buttonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
+                Déconnexion
+              </Text>
+            </TouchableOpacity>
           </View>
+        </View>
       </ScrollView>
     );
   }
@@ -179,7 +178,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   header: {
-    paddingVertical: 25,
+    paddingVertical: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -188,10 +187,10 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     marginTop: 30,
-    
+
   },
   welcomeText: {
-    fontSize: 18, 
+    fontSize: 18,
     marginTop: 10,
     fontWeight: '600',
   },
