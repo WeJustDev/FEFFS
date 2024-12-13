@@ -10,7 +10,7 @@ export const Colors = {
   light: {
     text: '#11181C',
     textsecondary: '#687076',
-    background: '#f4f4f4', // Légèrement modifié pour le thème clair
+    background: '#e0dede', // Légèrement modifié pour le thème clair
     tint: '#d1d1d1',
     icon: '#687076',
     tabIconDefault: '#687076',
