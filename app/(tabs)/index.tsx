@@ -31,9 +31,13 @@ const Header = ({ colorScheme }: { colorScheme: ColorScheme }) => {
 };
 
 export default function Index() {
+  const colorScheme = useColorScheme();
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [firstname, setFirstname] = useState("");
+  const [psw, setPsw] = useState("");
   const [hasPass, setHasPass] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const colorScheme = useColorScheme() as ColorScheme;
