@@ -83,7 +83,7 @@ export default function Planning() {
             showtime.eventDetails = event;
             newShowtimes.push(showtime);
           }
-          setUpdatedShowtimes(sortShowtimes(newShowtimes));
+          setUpdatedShowtimes(markOverlappingEvents(newShowtimes));
         } else {
           console.error("Invalid data format: events is not an array or is undefined");
         }
@@ -339,7 +339,16 @@ export default function Planning() {
     return `${endHours}:${endMinutes}`;
   }
 
-  function filterShowtimesByDay(showtimes, selectedDay) {
+  interface Showtime {
+    title: string;
+    date: Date;
+    localisation: string;
+    event: string;
+    eventDetails?: any;
+    overlap?: boolean;
+  }
+
+  function filterShowtimesByDay(showtimes: Showtime[], selectedDay: string): Showtime[] {
     return showtimes.filter((showtime) => {
       const showtimeDate = new Date(showtime.date);
       const showtimeDay = `${showtimeDate.getDate()}-${(showtimeDate.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -347,7 +356,17 @@ export default function Planning() {
     });
   }
 
-  function sortShowtimes(showtimes) {
+  interface EventDetails {
+    duration: number;
+    title: string;
+  }
+
+  interface ShowtimeWithDetails extends Showtime {
+    eventDetails: EventDetails;
+    overlap?: boolean;
+  }
+
+  function sortShowtimes(showtimes: ShowtimeWithDetails[]): ShowtimeWithDetails[] {
     return showtimes.sort((a, b) => {
       const startA = new Date(a.date).getTime();
       const startB = new Date(b.date).getTime();
@@ -359,6 +378,29 @@ export default function Planning() {
       }
       return startA - startB;
     });
+  }
+
+  function markOverlappingEvents(showtimes: ShowtimeWithDetails[]): ShowtimeWithDetails[] {
+    const sortedShowtimes = sortShowtimes(showtimes);
+    for (let i = 0; i < sortedShowtimes.length; i++) {
+      const currentEvent = sortedShowtimes[i];
+      const currentStart = new Date(currentEvent.date).getTime();
+      const currentEnd = currentStart + currentEvent.eventDetails.duration * 60000;
+
+      for (let j = i + 1; j < sortedShowtimes.length; j++) {
+        const nextEvent = sortedShowtimes[j];
+        const nextStart = new Date(nextEvent.date).getTime();
+        const nextEnd = nextStart + nextEvent.eventDetails.duration * 60000;
+
+        if (nextStart < currentEnd) {
+          currentEvent.overlap = true;
+          nextEvent.overlap = true;
+        } else {
+          break;
+        }
+      }
+    }
+    return sortedShowtimes;
   }
 }
 
@@ -384,5 +426,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 20,
     fontWeight: "bold",
-  },
+  }
 });
