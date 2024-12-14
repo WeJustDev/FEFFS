@@ -48,7 +48,7 @@ const DailyNews = () => {
 
     return (
         <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
-            <Text style={[ styles.header,{ color: Colors[colorScheme ?? 'light'].headerText },]}>
+            <Text style={[styles.header, { color: Colors[colorScheme ?? 'light'].headerText },]} accessibilityLabel="Programme Journalier" accessibilityRole='header'>
                 Programme Journalier
             </Text>
             <View style={styles.buttonContainer}>
@@ -61,6 +61,8 @@ const DailyNews = () => {
                         },
                     ]}
                     onPress={() => setActiveTab('horsSeances')}
+                    accessibilityLabel="Activité hors séances"
+                    accessibilityRole="button" 
                 >
                     <Text
                         style={[
@@ -82,6 +84,8 @@ const DailyNews = () => {
                         },
                     ]}
                     onPress={() => setActiveTab('films')}
+                    accessibilityLabel="Films"
+                    accessibilityRole="button" 
                 >
                     <Text
                         style={[
@@ -90,6 +94,7 @@ const DailyNews = () => {
                                 color: activeTab === 'films' ? 'white' : Colors[colorScheme ?? 'light'].dateTagText,
                             },
                         ]}
+                        
                     >
                         Films
                     </Text>
@@ -110,6 +115,7 @@ const DailyNews = () => {
                     styles.header,
                     { color: Colors[colorScheme ?? 'light'].headerText },
                 ]}
+                accessibilityLabel="Événement phare du jour" accessibilityRole='header'
             >
                 Événement phare du jour
             </Text>

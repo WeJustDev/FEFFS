@@ -27,22 +27,25 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
     const [program, setProgram] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isFormVisible, setIsFormVisible] = useState(false);
+    const firstnameRef = useRef<TextInput>(null);
+    const emailRef = useRef<TextInput>(null);
+    const pswRef = useRef<TextInput>(null);
 
     const formPosition = useRef(new Animated.Value(800)).current;
 
-    const hashedPsw = async (psw: string): Promise<string> => {    
+    const hashedPsw = async (psw: string): Promise<string> => {
         return await Crypto.digestStringAsync(
             Crypto.CryptoDigestAlgorithm.SHA256,
             psw
         );
-    } 
-        
+    }
+
     useEffect(() => {
         const checkUser = async () => {
             const storedName = await AsyncStorage.getItem('name');
             const storedEmail = await AsyncStorage.getItem('email');
             const storedFirstname = await AsyncStorage.getItem('firstname');
-            if (storedName && storedEmail && storedFirstname ) {
+            if (storedName && storedEmail && storedFirstname) {
                 setName(storedName);
                 setEmail(storedEmail);
                 setFirstname(storedFirstname);
@@ -104,7 +107,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
                     "password": hashedPassword,
                 }),
             });
-            
+
             if (!response.ok) {
                 setError('Erreur lors de l\'inscription.');
             }
@@ -116,7 +119,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
     };
 
     const handleSignIn = async () => {
-        if ( !email || !psw) {
+        if (!email || !psw) {
             setError('Veuillez remplir tous les champs.');
             return;
         }
@@ -138,7 +141,7 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
                     "password": hashedPassword,
                 }),
             });
-            
+
             const contentType = userByEmail.headers.get('content-type');
             if (contentType && contentType.indexOf('application/json') !== -1) {
                 const userData = await userByEmail.json();
@@ -157,10 +160,10 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
                             "email": email,
                         }),
                     }).then((response) => response.json())
-                    .then((data) => {
-                        console.log("userId:", data.userId);
-                        return data.userId;
-                    });
+                        .then((data) => {
+                            console.log("userId:", data.userId);
+                            return data.userId;
+                        });
 
                     const userProgramResponse = await fetch(`https://feffs.elioooooo.fr/program/get`, {
                         method: 'POST',
@@ -212,115 +215,246 @@ export default function SignUpScreen({ onLogin }: { onLogin: () => void }) {
     }
 
     return (
-      <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
-        <View style={styles.topSection}>
-          <View style={{
-            width: 80,
-            height: 80,
-            borderRadius: 50,
-            marginBottom: 20,
-            shadowColor: '#fff',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.5,
-            shadowRadius: 25,
-            elevation: 10,
-            overflow: 'hidden'
-          }}>
-            <Image
-              style={{ width: '100%', height: '100%' }}
-              source={require('@/assets/images/logo.png')}
-            />
-          </View>
-          <Text style={[styles.tagline, {color: Colors[colorScheme ?? 'light'].text}]}>
-            Simplifiez votre expérience, inscrivez-vous rapidement.
-          </Text>
-          <TouchableOpacity style={styles.startButton} onPress={() => { handleStart(); setFormType('signup'); }}>
-            <Text style={styles.startButtonText}>S'inscrire</Text>
-          </TouchableOpacity>
+        <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
+            <View style={styles.topSection}>
+                <View
+                    style={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 50,
+                        marginBottom: 20,
+                        shadowColor: '#fff',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 25,
+                        elevation: 10,
+                        overflow: 'hidden'
+                    }}
+                    accessible={true}
+                    accessibilityLabel="Logo de l'application FEFFS"
+                    accessibilityRole="image"
+                >
+                    <Image
+                        style={{ width: '100%', height: '100%' }}
+                        source={require('@/assets/images/logo.png')}
+                        accessible={false}
+                    />
+                </View>
+                <Text
+                    style={[styles.tagline, { color: Colors[colorScheme ?? 'light'].text }]}
+                    accessible={true}
+                    accessibilityRole="header"
+                    accessibilityLabel="Simplifiez votre expérience, inscrivez-vous rapidement."
+                >
+                    Simplifiez votre expérience, inscrivez-vous rapidement.
+                </Text>
+                <TouchableOpacity
+                    style={styles.startButton}
+                    onPress={() => { handleStart(); setFormType('signup'); }}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Bouton pour s'inscrire"
+                    accessibilityHint="Appuyez pour ouvrir le formulaire d'inscription"
+                >
+                    <Text style={styles.startButtonText}>S'inscrire</Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity style={styles.importButton} onPress={() => { handleStart(); setFormType('signin'); }}>
-            <Text style={styles.startButtonText}>Se connecter</Text>
-          </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.importButton}
+                    onPress={() => { handleStart(); setFormType('signin'); }}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Bouton pour se connecter"
+                    accessibilityHint="Appuyez pour ouvrir le formulaire de connexion"
+                >
+                    <Text style={styles.startButtonText}>Se connecter</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Formulaire animé */}
+            {isFormVisible && formType === 'signup' && (
+                <Animated.View
+                    style={[styles.formContainer, { transform: [{ translateY: formPosition }], backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}
+                    accessible={true}
+                    accessibilityLabel="Formulaire d'inscription"
+                    
+                    accessibilityViewIsModal={true}
+                >
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={handleCloseForm}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Bouton de fermeture"
+                        accessibilityHint="Appuyez pour fermer le formulaire d'inscription"
+                    >
+                        <Text style={[styles.closeButtonText, { color: Colors[colorScheme ?? 'light'].text }]}>✕</Text>
+                    </TouchableOpacity>
+                    <Text
+                        style={[styles.formTitle, { color: Colors[colorScheme ?? 'light'].text }]}
+                        accessible={true}
+                        accessibilityRole="header"
+                        accessibilityLabel="Créer un compte"
+                    >
+                        Créer un compte
+                    </Text>
+                    <Text
+                        style={[styles.formSubtitle, { color: Colors[colorScheme ?? 'light'].text }]}
+                        accessible={true}
+                        accessibilityLabel="Inscrivez-vous pour continuer"
+                    >
+                        Inscrivez-vous pour continuer
+                    </Text>
+                    {error && <Text style={styles.error} accessible={true} accessibilityRole="alert">{error}</Text>}
+                    <TextInput
+                        placeholder="Nom"
+                        style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                        placeholderTextColor="#aaa"
+                        value={name}
+                        onChangeText={setName}
+                        accessible={true}
+                        accessibilityLabel="Champ pour le nom"
+                        accessibilityHint="Entrez votre nom"
+                        autoFocus={true}
+                        importantForAccessibility="yes"
+                        returnKeyType="next"
+                        onSubmitEditing={() => firstnameRef.current?.focus()}
+                    />
+                    <TextInput
+                        ref={firstnameRef}
+                        placeholder="Prénom"
+                        style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                        placeholderTextColor="#aaa"
+                        value={firstname}
+                        onChangeText={setFirstname}
+                        accessible={true}
+                        accessibilityLabel="Champ pour le prénom"
+                        accessibilityHint="Entrez votre prénom"
+                        importantForAccessibility="yes"
+                        returnKeyType="next"
+                        onSubmitEditing={() => emailRef.current?.focus()}
+                    />
+                    <TextInput
+                        ref={emailRef}
+                        placeholder="Email"
+                        style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                        keyboardType="email-address"
+                        placeholderTextColor="#aaa"
+                        value={email}
+                        onChangeText={setEmail}
+                        accessible={true}
+                        accessibilityLabel="Champ pour l'email"
+                        accessibilityHint="Entrez votre adresse email"
+                        importantForAccessibility="yes"
+                        returnKeyType="next"
+                        onSubmitEditing={() => pswRef.current?.focus()}
+                    />
+                    <TextInput
+                        ref={pswRef}
+                        placeholder="Mot de passe"
+                        style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                        secureTextEntry={true}
+                        placeholderTextColor="#aaa"
+                        value={psw}
+                        onChangeText={setPsw}
+                        accessible={true}
+                        accessibilityLabel="Champ pour le mot de passe"
+                        accessibilityHint="Entrez votre mot de passe"
+                        importantForAccessibility="yes"
+                        returnKeyType="done"
+                        onSubmitEditing={handleSignUp}
+                    />
+                    <TouchableOpacity
+                        style={styles.submitButton}
+                        onPress={handleSignUp}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Bouton pour s'inscrire"
+                        accessibilityHint="Appuyez pour soumettre le formulaire d'inscription"
+                    >
+                        <Text style={styles.submitButtonText}>S'inscrire</Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            )}
+            {isFormVisible && formType === 'signin' && (
+                <Animated.View
+                    style={[styles.formContainer, { transform: [{ translateY: formPosition }], backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}
+                    accessible={true}
+                    accessibilityLabel="Formulaire de connexion"
+                    
+                    accessibilityViewIsModal={true}
+                >
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={handleCloseForm}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Bouton de fermeture"
+                        accessibilityHint="Appuyez pour fermer le formulaire de connexion"
+                    >
+                        <Text style={[styles.closeButtonText, { color: Colors[colorScheme ?? 'light'].text }]}>✕</Text>
+                    </TouchableOpacity>
+                    <Text
+                        style={[styles.formTitle, { color: Colors[colorScheme ?? 'light'].text }]}
+                        accessible={true}
+                        accessibilityRole="header"
+                        accessibilityLabel="Se connecter"
+                    >
+                        Se connecter
+                    </Text>
+                    <Text
+                        style={[styles.formSubtitle, { color: Colors[colorScheme ?? 'light'].text }]}
+                        accessible={true}
+                        accessibilityLabel="Connectez-vous à un compte déjà existant"
+                    >
+                        Connectez-vous à un compte déjà existant
+                    </Text>
+                    {error && <Text style={styles.error} accessible={true} accessibilityRole="alert">{error}</Text>}
+                    <TextInput
+                        placeholder="Email"
+                        style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                        keyboardType="email-address"
+                        placeholderTextColor="#aaa"
+                        value={email}
+                        onChangeText={setEmail}
+                        accessible={true}
+                        accessibilityLabel="Champ pour l'email"
+                        accessibilityHint="Entrez votre adresse email"
+                        autoFocus={true}
+                        importantForAccessibility="yes"
+                        returnKeyType="next"
+                        onSubmitEditing={() => pswRef.current?.focus()}
+                    />
+                    <TextInput
+                        ref={pswRef}
+                        placeholder="Mot de passe"
+                        style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
+                        secureTextEntry={true}
+                        placeholderTextColor="#aaa"
+                        value={psw}
+                        onChangeText={setPsw}
+                        accessible={true}
+                        accessibilityLabel="Champ pour le mot de passe"
+                        accessibilityHint="Entrez votre mot de passe"
+                        importantForAccessibility="yes"
+                        returnKeyType="done"
+                        onSubmitEditing={handleSignIn}
+                    />
+                    <TouchableOpacity
+                        style={styles.submitButton}
+                        onPress={handleSignIn}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Bouton pour se connecter"
+                        accessibilityHint="Appuyez pour soumettre le formulaire de connexion"
+                    >
+                        <Text style={styles.submitButtonText}>Se connecter</Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            )}
         </View>
-    
-        {/* Formulaire animé */}
-        {isFormVisible && formType === 'signup' && (
-          <Animated.View
-            style={[styles.formContainer, { transform: [{ translateY: formPosition }], backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
-            <TouchableOpacity style={styles.closeButton} onPress={handleCloseForm}>
-              <Text style={[styles.closeButtonText, { color: Colors[colorScheme ?? 'light'].text }]}>✕</Text>
-            </TouchableOpacity>
-            <Text style={[styles.formTitle, { color: Colors[colorScheme ?? 'light'].text }]}>Créer un compte</Text>
-            <Text style={[styles.formSubtitle, { color: Colors[colorScheme ?? 'light'].text }]}>Inscrivez-vous pour continuer</Text>
-            {error && <Text style={styles.error}>{error}</Text>}
-            <TextInput
-              placeholder="Nom"
-              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
-              placeholderTextColor="#aaa"
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              placeholder="Prénom"
-              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
-              placeholderTextColor="#aaa"
-              value={firstname}
-              onChangeText={setFirstname}
-            />
-            <TextInput
-              placeholder="Email"
-              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
-              keyboardType="email-address"
-              placeholderTextColor="#aaa"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              placeholder="Mot de passe"
-              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
-              secureTextEntry={true}
-              placeholderTextColor="#aaa"
-              value={psw}
-              onChangeText={setPsw}
-            />
-            <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
-              <Text style={styles.submitButtonText}>S'inscrire</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-        {isFormVisible && formType === 'signin' && (
-          <Animated.View
-            style={[styles.formContainer, { transform: [{ translateY: formPosition }], backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
-            <TouchableOpacity style={styles.closeButton} onPress={handleCloseForm}>
-              <Text style={[styles.closeButtonText, { color: Colors[colorScheme ?? 'light'].text }]}>✕</Text>
-            </TouchableOpacity>
-            <Text style={[styles.formTitle, { color: Colors[colorScheme ?? 'light'].text }]}>Se connecter</Text>
-            <Text style={[styles.formSubtitle, { color: Colors[colorScheme ?? 'light'].text }]}>Connectez-vous à un compte déjà existant</Text>
-            {error && <Text style={styles.error}>{error}</Text>}
-            <TextInput
-              placeholder="Email"
-              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
-              keyboardType="email-address"
-              placeholderTextColor="#aaa"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              placeholder="Mot de passe"
-              style={[styles.input, { color: Colors[colorScheme ?? 'light'].text }]}
-              secureTextEntry={true}
-              placeholderTextColor="#aaa"
-              value={psw}
-              onChangeText={setPsw}
-            />
-            <TouchableOpacity style={styles.submitButton} onPress={handleSignIn}>
-              <Text style={styles.submitButtonText}>Se connecter</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-      </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
