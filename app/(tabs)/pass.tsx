@@ -6,13 +6,15 @@ import {
   StyleSheet,
   TextInput,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from '@react-navigation/native';
+import { useEffect, useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
 import QRCode from "react-native-qrcode-svg";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
+import { Link } from 'expo-router';
 
 type Pass = {
   number: number;
@@ -47,60 +49,60 @@ export default function Pass() {
     "image",
   ]);
 
-  useEffect(() => {
-    AsyncStorage.getItem("name").then((storedLastname) => {
-      if (storedLastname !== null) {
-        setLastname(storedLastname);
-        setInfosNeeded((prevInfos) =>
-          prevInfos.filter((info) => info !== "lastname")
-        );
-      }
-    });
+  useFocusEffect(
+    useCallback(() => {
+      // Fonction pour charger toutes les données
+      const loadData = async () => {
+        const storedLastname = await AsyncStorage.getItem("name");
+        if (storedLastname !== null) {
+          setLastname(storedLastname);
+          setInfosNeeded((prevInfos) =>
+            prevInfos.filter((info) => info !== "lastname")
+          );
+        }
 
-    AsyncStorage.getItem("firstname").then((storedFirstname) => {
-      if (storedFirstname !== null) {
-        setFirstname(storedFirstname);
-        setInfosNeeded((prevInfos) =>
-          prevInfos.filter((info) => info !== "firstname")
-        );
-      }
-    });
+        const storedFirstname = await AsyncStorage.getItem("firstname");
+        if (storedFirstname !== null) {
+          setFirstname(storedFirstname);
+          setInfosNeeded((prevInfos) =>
+            prevInfos.filter((info) => info !== "firstname")
+          );
+        }
 
-    AsyncStorage.getItem("email").then((storedEmail) => {
-      if (storedEmail !== null) {
-        setEmail(storedEmail);
-        setInfosNeeded((prevInfos) =>
-          prevInfos.filter((info) => info !== "email")
-        );
-      }
-    });
+        const storedEmail = await AsyncStorage.getItem("email");
+        if (storedEmail !== null) {
+          setEmail(storedEmail);
+          setInfosNeeded((prevInfos) =>
+            prevInfos.filter((info) => info !== "email")
+          );
+        }
 
-    AsyncStorage.getItem("birthdate").then((storedBirthdate) => {
-      if (storedBirthdate !== null) {
-        setBirthdate(storedBirthdate);
-        setInfosNeeded((prevInfos) =>
-          prevInfos.filter((info) => info !== "birthdate")
-        );
-      }
-    });
+        const storedBirthdate = await AsyncStorage.getItem("birthdate");
+        if (storedBirthdate !== null) {
+          setBirthdate(storedBirthdate);
+          setInfosNeeded((prevInfos) =>
+            prevInfos.filter((info) => info !== "birthdate")
+          );
+        }
 
-    AsyncStorage.getItem("image").then((storedImage) => {
-      if (storedImage !== null) {
-        setImage(storedImage);
-        setInfosNeeded((prevInfos) =>
-          prevInfos.filter((info) => info !== "image")
-        );
-      }
-    });
+        const storedImage = await AsyncStorage.getItem("image");
+        if (storedImage !== null) {
+          setImage(storedImage);
+          setInfosNeeded((prevInfos) =>
+            prevInfos.filter((info) => info !== "image")
+          );
+        }
 
-    AsyncStorage.getItem("pass").then((storedPass) => {
-      if (storedPass !== null) {
-        const parsedPass = JSON.parse(storedPass);
-        console.log("parsed Pass 1: ", parsedPass);
-        setPass(parsedPass);
-      }
-    });
-  }, []);
+        const storedPass = await AsyncStorage.getItem("pass");
+        if (storedPass !== null) {
+          const parsedPass = JSON.parse(storedPass);
+          setPass(parsedPass);
+        }
+      };
+
+      loadData();
+    }, [])
+  );
 
   // useEffect(() => {
   //   if (infosNeeded.length === 0) {
@@ -238,7 +240,7 @@ export default function Pass() {
                   logo={{ uri: base64logo }}
                   value={`https://feffs.elioooooo.fr/pass/get/${pass._id}`}
                   logoBackgroundColor="transparent"
-                  size={250}
+                  size={150}
                 />
               </View>
             </View>
@@ -252,7 +254,7 @@ export default function Pass() {
                 gap: 10,
               }}
             >
-                <View
+              <View
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -260,7 +262,7 @@ export default function Pass() {
                   flex: 1,
                   gap: 10,
                 }}
-                >
+              >
                 <Image
                   style={{ width: "35%", aspectRatio: 1, borderRadius: 5 }}
                   source={{ uri: pass.image }}
@@ -269,20 +271,20 @@ export default function Pass() {
                   style={{ display: "flex", flexDirection: "column", gap: 5, justifyContent: 'space-around' }}
                 >
                   <Text style={{ color: Colors[colorScheme ?? "light"].text, fontWeight: "bold" }}>
-                  {pass.lastname} {pass.firstname}
+                    {pass.lastname} {pass.firstname}
                   </Text>
                   <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-                  {pass.email}
+                    {pass.email}
                   </Text>
                   <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
                     Né le {new Date(pass.birthdate).toLocaleDateString("fr-FR")}
                   </Text>
                 </View>
-                </View>
+              </View>
             </View>
 
             <Pressable
-              style={ styles.submitButton }
+              style={styles.submitButton}
               onPress={() => {
                 AsyncStorage.removeItem("name");
                 AsyncStorage.removeItem("firstname");
@@ -293,130 +295,28 @@ export default function Pass() {
                 setPass(null);
               }}
             >
-              <Text style={ styles.submitButtonText }>Supprimer mon Pass</Text>
+              <Text style={styles.submitButtonText}>Supprimer mon Pass</Text>
             </Pressable>
           </View>
         ) : (
-          <>
-            <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-              Vous êtes sur le point de générer votre Pass pour le festival :
+          <View style={[
+            styles.container,
+            {
+              backgroundColor: Colors[colorScheme ?? "light"].background,
+              borderColor: Colors[colorScheme ?? "light"].tint
+            }
+          ]}>
+            <Text style={[styles.mainText, { color: Colors[colorScheme ?? "light"].headerText }]}>Oh non... pas encore de pass ?</Text>
+            <Text style={[styles.descriptionText, { color: Colors[colorScheme ?? "light"].headerText }]}>
+              Pas de panique ! Rendez-vous à la billetterie pour obtenir votre pass et
+              bénéficier de tout les super avantages !
             </Text>
-            <TextInput
-              placeholder="Nom"
-              style={[
-                styles.input,
-                { color: Colors[colorScheme ?? "light"].text },
-              ]}
-              placeholderTextColor="#aaa"
-              value={lastname}
-              onChangeText={setLastname}
-            />
-            <TextInput
-              placeholder="Prénom"
-              style={[
-                styles.input,
-                { color: Colors[colorScheme ?? "light"].text },
-              ]}
-              placeholderTextColor="#aaa"
-              value={firstname}
-              onChangeText={setFirstname}
-            />
-            <TextInput
-              placeholder="Email"
-              style={[
-                styles.input,
-                { color: Colors[colorScheme ?? "light"].text },
-              ]}
-              placeholderTextColor="#aaa"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
-              Date de naissance
-            </Text>
-            <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
-              <Picker
-                selectedValue={birthdate.split("-")[2] || ""}
-                style={[
-                  styles.input,
-                  { color: Colors[colorScheme ?? "light"].text },
-                ]}
-                onValueChange={(day) =>
-                  setBirthdate(
-                    `${birthdate.split("-")[0] || ""}-${
-                      birthdate.split("-")[1] || ""
-                    }-${day}`
-                  )
-                }
-              >
-                {[...Array(31).keys()].map((day) => (
-                  <Picker.Item
-                    style={[
-                      styles.input,
-                      { color: Colors[colorScheme ?? "light"].text },
-                    ]}
-                    key={day + 1}
-                    label={`${day + 1}`}
-                    value={`${day + 1}`}
-                  />
-                ))}
-              </Picker>
-              <Picker
-                selectedValue={birthdate.split("-")[1] || ""}
-                style={[
-                  styles.input,
-                  { color: Colors[colorScheme ?? "light"].text },
-                ]}
-                onValueChange={(month) =>
-                  setBirthdate(
-                    `${birthdate.split("-")[0] || ""}-${month}-${
-                      birthdate.split("-")[2] || ""
-                    }`
-                  )
-                }
-              >
-                {[...Array(12).keys()].map((month) => (
-                  <Picker.Item
-                    key={month + 1}
-                    label={`${month + 1}`}
-                    value={`${month + 1}`}
-                  />
-                ))}
-              </Picker>
-              <Picker
-                selectedValue={birthdate.split("-")[0] || ""}
-                style={styles.input}
-                onValueChange={(year) =>
-                  setBirthdate(
-                    `${year}-${birthdate.split("-")[1] || ""}-${
-                      birthdate.split("-")[2] || ""
-                    }`
-                  )
-                }
-              >
-                {[...Array(100).keys()].map((year) => (
-                  <Picker.Item
-                    key={year + 1920}
-                    label={`${year + 1920}`}
-                    value={`${year + 1920}`}
-                  />
-                ))}
-              </Picker>
-            </View>
-            <TextInput
-              placeholder="Image de l'utilisateur"
-              style={styles.input}
-              placeholderTextColor="#aaa"
-              value={image}
-              onChangeText={setImage}
-            />
-            <Pressable
-              style={{ backgroundColor: "red", padding: 10 }}
-              onPress={handleGeneration}
-            >
-              <Text>Générer mon Pass</Text>
-            </Pressable>
-          </>
+            <Link href="/billeterie" style={styles.submitButton}>
+              <Text style={[styles.mainText, { color: Colors[colorScheme ?? "light"].headerText}]}>
+                Aller à la Billetterie
+              </Text>
+            </Link>
+          </View>
         )}
       </View>
     </>
@@ -424,6 +324,27 @@ export default function Pass() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+    padding: 20,
+    borderRadius: 10,
+    width: '100%',
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 2 },
+    boxShadow: '300px 0px 50px rgba(255, 47, 0, 0.1)',
+  },
+  mainText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 15,
+  },
   logoContainer: {
     height: 40,
     width: 40,
@@ -461,6 +382,7 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: "rgba(206, 90, 75, 0.3)",
     paddingVertical: 15,
+    paddingHorizontal: 30,
     borderRadius: 25,
     alignItems: "center",
     marginTop: 10,

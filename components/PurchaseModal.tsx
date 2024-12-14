@@ -6,13 +6,25 @@ import { Picker } from '@react-native-picker/picker';
 import { ImgPicker } from './ImagePicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+type Pass = {
+  number?: number;
+  email: string;
+  birthdate: string;
+  image: string;
+  lastname: string;
+  firstname: string;
+  _id?: string;
+  __v?: number;
+};
+
 type PurchaseModalProps = {
   visible: boolean;
   onClose: () => void;
   onPassGenerated?: (pass: any) => void;
+  onPurchaseSuccess?: () => void;
 };
 
-const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassGenerated }) => {
+const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassGenerated, onPurchaseSuccess }) => {
   const colorScheme = useColorScheme();
   const [base64Image, setBase64Image] = useState<string | null>(null);
   const [imageSelected, setImageSelected] = useState<boolean>(false);
@@ -42,17 +54,17 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
     setBase64Image(null);
   };
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     if (!isFormComplete) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs');
       return;
     }
-
+  
     try {
       const dateNaissance = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-
+  
       console.log('Formatted birthdate:', dateNaissance);
-
+  
       const requestBody = {
         lastname: nom,
         firstname: prenom,
@@ -60,43 +72,49 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
         birthdate: dateNaissance,
         image: base64Image,
       };
-
-      console.log('Sending request with body:', requestBody);
-
-      const response = await fetch("https://feffs.elioooooo.fr/pass/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server response:', errorText);
-        throw new Error(`Erreur lors de la création du pass: ${errorText}`);
-      }
-
-      const passData = await response.json();
-      console.log('Pass data received:', passData);
-
+  
+      console.log('Request body:', requestBody);
+  
+      // Appel à la base de données commentés pour éviter les erreurs
+      // const response = await fetch("https://feffs.elioooooo.fr/pass/add", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(requestBody),
+      // });
+  
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', response.headers);
+  
+      // if (!response.ok) {
+      //   const errorText = await response.text();
+      //   console.error('Server response:', errorText);
+      //   throw new Error(`Erreur lors de la création du pass: ${errorText}`);
+      // }
+  
+      // const passData = await response.json();
+      // console.log('Pass data received:', passData);
+  
+      const passData = requestBody;
+  
       await AsyncStorage.setItem("pass", JSON.stringify(passData));
       await AsyncStorage.setItem("name", nom);
       await AsyncStorage.setItem("firstname", prenom);
       await AsyncStorage.setItem("email", email);
       await AsyncStorage.setItem("birthdate", dateNaissance);
       await AsyncStorage.setItem("image", base64Image || '');
-
+  
       if (onPassGenerated) {
         onPassGenerated(passData);
       }
-
+      if (onPurchaseSuccess) {
+        onPurchaseSuccess();
+      }
+  
       resetForm();
       onClose();
-
+  
     } catch (error) {
       console.error("Erreur de génération du pass:", error);
       Alert.alert('Erreur', 'Impossible de générer le pass. Veuillez réessayer.');

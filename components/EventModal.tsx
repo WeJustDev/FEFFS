@@ -12,7 +12,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface Event {
-  id: number;
+  _id: string;
   title: string;
   date: string;
   location: string;
@@ -78,7 +78,7 @@ const EventModal: React.FC<EventModalProps> = ({ visible, onClose }) => {
         ) : events.length > 0 ? (
           <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }}>
             {events.map((event) => (
-              <View key={event.id} style={styles.eventItem}>
+              <View key={event._id} style={styles.eventItem}>
                 <Text
                   style={[
                     styles.eventTitle,
