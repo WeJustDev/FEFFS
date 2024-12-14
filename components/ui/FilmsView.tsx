@@ -20,6 +20,9 @@ const FilmsView = () => {
                     source={film.image}
                     style={styles.filmBox}
                     imageStyle={{ borderRadius: 10, transform: [{ scale: 1.1 }] }}
+                    accessible={true}
+                    accessibilityLabel={`Affiche du film : ${film.title}`}
+                    accessibilityRole="image"
                 >
                     <View style={styles.overlay}>
                         <Text
@@ -27,6 +30,9 @@ const FilmsView = () => {
                                 styles.filmsText,
                                 { color: Colors[colorScheme ?? 'light'].headerText },
                             ]}
+                            accessible={true}
+                            accessibilityRole="header"
+                            accessibilityLabel={`Titre du film : ${film.title}`}
                         >
                             {film.title}
                         </Text>

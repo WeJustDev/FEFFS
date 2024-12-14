@@ -22,16 +22,22 @@ const HighlightActivity: React.FC<HighlightActivityProps> = ({ activity }) => {
                 source={activity.image}
                 style={styles.image}
                 resizeMode="cover"
+                accessible={true}
+                accessibilityLabel={`Image de l'activité : ${activity.title}`}
             />
             {/* Overlay et texte */}
-            <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
-                <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+            <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]} accessible={true}
+                accessibilityRole="summary">
+                <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].headerText }]} accessible={true}
+                    accessibilityRole="header" accessibilityLabel={`Titre de l'activité ${activity.title}`}>
                     {activity.title}
                 </Text>
-                <Text style={[styles.description, { color: Colors[colorScheme ?? 'light'].text }]}>
+                <Text style={[styles.description, { color: Colors[colorScheme ?? 'light'].text }]} accessible={true}
+                    accessibilityLabel={`Description de l'activité : ${activity.description}`}>
                     {activity.description}
                 </Text>
-                <Text style={[styles.date, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
+                <Text style={[styles.date, { color: Colors[colorScheme ?? 'light'].dateTagText }]} accessible={true}
+                    accessibilityLabel={`Date de l'activité : ${activity.date}`}>
                     {activity.date}
                 </Text>
             </View>

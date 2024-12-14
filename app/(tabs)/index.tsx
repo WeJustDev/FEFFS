@@ -17,13 +17,19 @@ type ColorScheme = 'light' | 'dark';
 // Header component with logo and welcome text
 const Header = ({ colorScheme }: { colorScheme: ColorScheme }) => {
   return (
-    <ImageBackground source={require('@/assets/images/2414.jpg')} style={styles.header}>
+    <ImageBackground source={require('@/assets/images/2414.jpg')} style={styles.header} accessible={true}
+      accessibilityLabel="Arrière-plan de l'en-tête">
       <Image
         source={require('@/assets/images/logo.png')}
         style={styles.logo}
         resizeMode="contain"
+        accessible={true}
+        accessibilityLabel="Logo FEFFS"
+        accessibilityRole="image"
       />
-      <Text style={[styles.welcomeText, { color: Colors[colorScheme ?? 'light'].text }]}>
+      <Text style={[styles.welcomeText, { color: Colors[colorScheme ?? 'light'].text }]} accessible={true}
+        accessibilityRole="header"
+        accessibilityLabel="Bienvenue sur l'application FEFFS">
         Bienvenue sur l'app FEFFS
       </Text>
     </ImageBackground>
@@ -101,23 +107,36 @@ export default function Index() {
                 styles.profileCircle,
                 { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg },
               ]}
+              accessible={false}
             >
-              <Text style={[styles.profileInitial, { color: Colors[colorScheme ?? 'light'].text }]}>
+              <Text style={[styles.profileInitial, { color: Colors[colorScheme ?? 'light'].text }]} accessible={false}>
                 {name.charAt(0).toUpperCase()}
               </Text>
             </View>
+        
             <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              <Text
+                style={[styles.profileName, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLabel={`Nom d'utilisateur : ${name}`}
+              >
                 {name}
               </Text>
-              <Text style={[styles.profileEmail, { color: Colors[colorScheme ?? 'light'].text }]}>
+              <Text
+                style={[styles.profileEmail, { color: Colors[colorScheme ?? 'light'].text }]}
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLabel={`Email : ${email}`}
+              >
                 {email}
               </Text>
             </View>
           </View>
           <View style={[styles.accueil, { backgroundColor: Colors[colorScheme ?? 'light'].pageBg }]}>
             <View style={{ padding: 16 }}>
-              <Text style={[styles.welcome, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              <Text style={[styles.welcome, { color: Colors[colorScheme ?? 'light'].headerText }]} accessibilityLabel="Bienvenue" accessibilityRole='header'
+                >
                 Bienvenue !
               </Text>
               {/* Vérification du passe utilisateur */}
@@ -126,6 +145,9 @@ export default function Index() {
                   <View style={styles.passContainerHas}>
                     <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Vous avez 1 passe actif</Text>
                     <TouchableOpacity
+                      accessibilityLabel="Voir le passe"
+                      accessibilityRole="button"  
+                      accessibilityHint="Ce bouton vous permet de voir votre passe actif."
                       style={[styles.viewPassButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}
                       onPress={() => console.log('Voir le passe')}
                     >
@@ -136,10 +158,13 @@ export default function Index() {
                   </View>
                 ) : (
                   <View style={styles.noPassContainer}>
-                    <Text style={[styles.nopasstext, { color: Colors[colorScheme ?? 'light'].text }]}>
+                      <Text style={[styles.nopasstext, { color: Colors[colorScheme ?? 'light'].text }]} accessibilityLabel="Vous n'avez encore acheté aucun passe pour l'instant." accessibilityRole='summary'>
                       Vous n'avez encore acheté aucun passe pour l'instant.
                     </Text>
                     <TouchableOpacity
+                      accessibilityLabel="Acheter un passe"
+                      accessibilityRole="button"
+                      accessibilityHint="Ce bouton vous permet d'acheter un passe."
                       style={[styles.buyButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}
                       onPress={handleBuy}
                     >
@@ -155,9 +180,13 @@ export default function Index() {
             {/* Ajout des boutons sous DailyNews */}
 
             <TouchableOpacity
+          
+              accessibilityLabel="Déconnexion"
+              accessibilityRole="button"
+              accessibilityHint='Ce bouton vous permet de vous déconnecter.'
               style={[styles.button, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg, borderColor: Colors[colorScheme ?? 'light'].dateTagText, borderWidth: 1, },]}
               onPress={handleLogout}>
-              <Text style={[styles.buttonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
+              <Text style={[styles.buttonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]} >
                 Déconnexion
               </Text>
             </TouchableOpacity>
