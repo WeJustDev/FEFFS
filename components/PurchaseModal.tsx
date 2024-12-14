@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type PurchaseModalProps = {
   visible: boolean;
   onClose: () => void;
-  onPassGenerated?: (pass: any) => void; 
+  onPassGenerated?: (pass: any) => void;
 };
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassGenerated }) => {
@@ -20,12 +20,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
 
-  // Ajoutez les états pour le jour, le mois et l'année
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
 
-  // Mettez à jour isFormComplete
   const isFormComplete = prenom && nom && email && day && month && year && imageSelected;
 
   const handleClose = () => {
@@ -51,30 +49,40 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
     }
 
     try {
-      // Prepare date of birth in the format YYYY-MM-DD
       const dateNaissance = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+      console.log('Formatted birthdate:', dateNaissance);
+
+      const requestBody = {
+        lastname: nom,
+        firstname: prenom,
+        email: email,
+        birthdate: dateNaissance,
+        image: base64Image,
+      };
+
+      console.log('Sending request with body:', requestBody);
 
       const response = await fetch("https://feffs.elioooooo.fr/pass/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          lastname: nom,
-          firstname: prenom,
-          email: email,
-          birthdate: dateNaissance,
-          image: base64Image,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error('Erreur lors de la création du pass');
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        throw new Error(`Erreur lors de la création du pass: ${errorText}`);
       }
 
       const passData = await response.json();
+      console.log('Pass data received:', passData);
 
-      // Store pass data in AsyncStorage
       await AsyncStorage.setItem("pass", JSON.stringify(passData));
       await AsyncStorage.setItem("name", nom);
       await AsyncStorage.setItem("firstname", prenom);
@@ -82,12 +90,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
       await AsyncStorage.setItem("birthdate", dateNaissance);
       await AsyncStorage.setItem("image", base64Image || '');
 
-      // Optional callback to parent component
       if (onPassGenerated) {
         onPassGenerated(passData);
       }
 
-      // Reset form and close modal
       resetForm();
       onClose();
 
@@ -176,13 +182,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
               Date de naissance :
             </Text>
             <View style={styles.datePickerContainer}>
-              {/* Picker pour le jour */}
               <Picker
                 selectedValue={day}
                 onValueChange={(value: string) => setDay(value)}
                 style={styles.picker}
-                itemStyle={styles.pickerItem} // Ajoutez ceci
-                mode="dropdown" // Optionnel : pour un style cohérent
+                itemStyle={styles.pickerItem}
+                mode="dropdown"
               >
                 <Picker.Item label="Jour" value="" />
                 {[...Array(31)].map((_, i: number) => (
@@ -190,13 +195,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
                 ))}
               </Picker>
 
-              {/* Picker pour le mois */}
               <Picker
                 selectedValue={month}
                 onValueChange={(value: string) => setMonth(value)}
                 style={styles.picker}
-                itemStyle={styles.pickerItem} // Ajoutez ceci
-                mode="dropdown" // Optionnel
+                itemStyle={styles.pickerItem}
+                mode="dropdown"
               >
                 <Picker.Item label="Mois" value="" />
                 {[...Array(12)].map((_, i) => (
@@ -204,13 +208,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
                 ))}
               </Picker>
 
-              {/* Picker pour l'année */}
               <Picker
                 selectedValue={year}
                 onValueChange={(value: string) => setYear(value)}
                 style={styles.picker}
-                itemStyle={styles.pickerItem} // Ajoutez ceci
-                mode="dropdown" // Optionnel
+                itemStyle={styles.pickerItem}
+                mode="dropdown"
               >
                 <Picker.Item label="Année" value="" />
                 {Array.from({ length: 100 }, (_, i: number) => {
@@ -254,33 +257,33 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
             </View>
           </View>
           <View style={[{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', width: "100%", gap: 10 }]}>
-          <TouchableOpacity
-            style={[styles.cancelButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
-            onPress={handleClose}
-          >
-            <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Annuler</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            disabled={!isFormComplete}
-            style={[
-              styles.paymentButton,
-              {
-                backgroundColor: isFormComplete
-                  ? Colors[colorScheme ?? 'light'].button
-                  : Colors[colorScheme ?? 'light'].cardDarkBg,
-              },
-            ]}
-            onPress={handleSubmit}
-          >
-            <Text style={{
-              color: isFormComplete
-                ? Colors[colorScheme ?? 'light'].headerText
-                : 'gray'
-            }}>
-              Passer au paiement
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[styles.cancelButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
+              onPress={handleClose}
+            >
+              <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Annuler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              disabled={!isFormComplete}
+              style={[
+                styles.paymentButton,
+                {
+                  backgroundColor: isFormComplete
+                    ? Colors[colorScheme ?? 'light'].button
+                    : Colors[colorScheme ?? 'light'].cardDarkBg,
+                },
+              ]}
+              onPress={handleSubmit}
+            >
+              <Text style={{
+                color: isFormComplete
+                  ? Colors[colorScheme ?? 'light'].headerText
+                  : 'gray'
+              }}>
+                Passer au paiement
+              </Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.legalSection}>
             <Text style={[styles.legalText, { color: Colors[colorScheme ?? 'light'].headerText }]}>
               Vos informations personnelles seront utilisées uniquement dans le cadre de l'achat de votre pass et ne seront pas partagées avec des tiers sans votre consentement explicite.
@@ -296,7 +299,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     paddingHorizontal: 25,
-    backgroundColor: Colors.light.pageBg, // Ensure consistent background
+    backgroundColor: Colors.light.pageBg,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -327,7 +330,7 @@ const styles = StyleSheet.create({
   },
   pickerItem: {
     fontSize: 16,
-    height: 44, // Hauteur de chaque item
+    height: 44,
   },
   logo: {
     width: '100%',
