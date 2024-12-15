@@ -318,10 +318,13 @@ export default function Billeterie() {
                 <TouchableHighlight
                   style={{
                     boxShadow: '100px 0px 100px rgba(255, 255, 255, 0.3)',
-                    backgroundColor: Colors[colorScheme ?? 'light'].pageBg,
+                    backgroundColor: Colors[colorScheme ?? 'light'].button,
                     paddingVertical: 12,
                     paddingHorizontal: 32,
                     borderRadius: 25,
+                    borderColor: Colors[colorScheme ?? 'light'].dateTagBg,
+                    borderWidth: 5,
+                    padding: 5,
                   }}
                   onPress={() => setPurchaseModalVisible(true)}
                   accessible={true}
@@ -329,8 +332,8 @@ export default function Billeterie() {
                   accessibilityLabel="Acheter un Pass"
                   accessibilityHint="Appuyez pour ouvrir le formulaire d'achat de pass"
                 >
-                  <View>
-                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: Colors[colorScheme ?? 'light'].headerText }}
+                  <View >
+                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: Colors[colorScheme ?? 'light'].text,  textAlign: 'center' }}
                       accessible={true}
                       accessibilityRole="text"
                       accessibilityLabel="Acheter un Pass"

@@ -52,7 +52,7 @@ export default function TabLayout() {
         name="pass"
         options={{
           title: 'Pass',
-          tabBarIcon: ({ color }) => <MaterialIcons name="add-shopping-cart" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <MaterialIcons name="assignment-ind" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
