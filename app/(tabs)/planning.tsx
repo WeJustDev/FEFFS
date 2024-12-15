@@ -5,13 +5,17 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  AccessibilityInfo, 
+  findNodeHandle,
+  TouchableOpacity
 } from "react-native";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+
 
 let days = [
   "20-09",
@@ -239,9 +243,27 @@ export default function Planning() {
     });
   };
 
+  const consultezRef = useRef<TouchableOpacity>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const setFocus = () => {
+        setTimeout(() => {
+          if (consultezRef.current) {
+            const nodeHandle = findNodeHandle(consultezRef.current);
+            if (nodeHandle) {
+              AccessibilityInfo.setAccessibilityFocus(nodeHandle);
+            }
+          }
+        }, 100);
+      };
+      setFocus();
+    }, [])
+  );
+
   return (
     <>
-          {notification && (
+      {notification && (
         <View style={{ width: "100%", padding: 10, position: "absolute" }}>
           <View
             style={[
@@ -251,6 +273,10 @@ export default function Planning() {
                 backgroundColor: Colors[colorScheme ?? "light"].background,
               },
             ]}
+            accessible={true}
+            // accessibilityLiveRegion="assertive"
+            accessibilityRole="alert"
+            accessibilityLabel={error && error.startsWith("Erreur") ? "Erreur de notification" : "Notification de succès"}
           >
             <View
               style={{
@@ -270,6 +296,7 @@ export default function Planning() {
                       styles.message,
                       { color: Colors[colorScheme ?? "light"].texterror, flex: 1 },
                     ]}
+                    accessible={false}
                   >
                     Erreur...
                   </Text>
@@ -279,6 +306,7 @@ export default function Planning() {
                       styles.message,
                       { color: Colors[colorScheme ?? "light"].textsuccess, flex: 1 },
                     ]}
+                    accessible={false}
                   >
                     Succès !
                   </Text>
@@ -297,12 +325,16 @@ export default function Planning() {
                       name="error.fill"
                       size={16}
                       color={Colors[colorScheme ?? "light"].texterror}
+                      accessible={false}
+                      accessibilityLabel=""
                     />
                   ) : (
                     <IconSymbol
                       name="checkmark"
                       size={16}
                       color={Colors[colorScheme ?? "light"].textsuccess}
+                    // accessible={false}
+                    // accessibilityLabel=""
                     />
                   )}
                   <Text
@@ -310,14 +342,22 @@ export default function Planning() {
                       styles.message,
                       { color: Colors[colorScheme ?? "light"].text, flex: 1, textAlign: "left" },
                     ]}
+                    accessible={true}
+                    accessibilityRole="text"
+                    accessibilityLabel={error || "Opération réussie"}
                   >
                     {error}
                   </Text>
                 </View>
               </View>
-              <Pressable onPress={() => setNotification(false)}>
+              <Pressable
+                onPress={() => setNotification(false)}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Fermer la notification"
+              >
                 <Text
-                  style={[ 
+                  style={[
                     styles.message,
                     { color: Colors[colorScheme ?? "light"].text },
                   ]}
@@ -329,6 +369,8 @@ export default function Planning() {
           </View>
         </View>
       )}
+
+      
       <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
         <View
           style={{
@@ -341,22 +383,36 @@ export default function Planning() {
             <Image
               style={styles.logo}
               source={require("@/assets/images/logo.png")}
+              accessible={true}
+              accessibilityLabel="Logo de l'application"
             />
           </View>
           <View style={{ justifyContent: "center" }}>
-            <Text
-              style={[
-                styles.welcomeText,
-                { color: Colors[colorScheme ?? "light"].headerText },
-              ]}
+            <TouchableOpacity
+              ref={consultezRef}
+              accessible={true}
+              accessibilityRole="header"
+              accessibilityLabel="Titre de bienvenue"
+              importantForAccessibility="yes"
             >
-              Consultez
-            </Text>
+              <Text
+                style={[
+                  styles.welcomeText,
+                  { color: Colors[colorScheme ?? "light"].headerText },
+                ]}
+                importantForAccessibility="no-hide-descendants"
+              >
+                Consultez
+              </Text>
+            </TouchableOpacity>
             <Text
               style={[
                 styles.titleText,
                 { color: Colors[colorScheme ?? "light"].headerText },
               ]}
+              accessible={true}
+              accessibilityRole="header"
+              accessibilityLabel="Votre programme"
             >
               Votre programme
             </Text>
@@ -373,6 +429,9 @@ export default function Planning() {
           padding: 20,
           paddingTop: 0,
         }}
+        accessible={true}
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Sélection des jours"
       >
         {days.map((day) => (
           <Pressable
@@ -391,6 +450,10 @@ export default function Planning() {
               alignItems: "center",
               position: "relative",
             }}
+            accessible={true}
+            accessibilityRole="radio"
+            accessibilityLabel={`Jour ${day.split("-")[0]}`}
+            accessibilityState={{ selected: selectedDay === day }}
           >
             <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
               {day.split("-")[0]}
@@ -407,6 +470,8 @@ export default function Planning() {
                   borderWidth: 2,
                   borderColor: Colors[colorScheme ?? "light"].dateTagText,
                 }}
+                accessible={false}
+                accessibilityLabel=""
               />
             )}
           </Pressable>
@@ -424,6 +489,8 @@ export default function Planning() {
                 alignItems: "center",
                 gap: 20,
               }}
+              accessible={true}
+              accessibilityLabel={`Événement ${showtime.eventDetails.title} à ${new Date(showtime.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
             >
               <View style={{ display: "flex", gap: 5 }}>
                 <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
@@ -450,6 +517,8 @@ export default function Planning() {
                   borderRadius: 4,
                   height: "100%",
                 }}
+                accessible={false}
+                accessibilityLabel=""
               ></View>
               <View
                 style={{
@@ -470,11 +539,15 @@ export default function Planning() {
                     flexDirection: "row",
                     alignItems: "center",
                   }}
+                  accessible={false}
+                  accessibilityLabel=""
                 >
                   <IconSymbol
                     name="location.fill"
                     size={15}
                     color={Colors[colorScheme ?? "light"].textsecondary}
+                  // accessible={false}
+                  // accessibilityLabel=""
                   />
                   <Text
                     style={{
@@ -495,11 +568,16 @@ export default function Planning() {
                       alignItems: "center",
                       gap: 4,
                     }}
+                    accessible={true}
+                    accessibilityRole="alert"
+                    accessibilityLabel="Avis de superposition d'événements"
                   >
                     <IconSymbol
                       name="warning.fill"
                       size={20}
                       color={Colors[colorScheme ?? "light"].dateTagText}
+                      accessible={false}
+                      accessibilityLabel=""
                     />
                     <Text
                       style={{

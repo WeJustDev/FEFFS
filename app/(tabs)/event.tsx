@@ -63,7 +63,7 @@ export default function TabTwoScreen() {
     fetch('https://feffs.elioooooo.fr/event/get')
       .then(response => response.json())
       .then(data => setEvents(data))
-      .then(() => console.log(events))   
+      .then(() => console.log(events))
       .then(() => console.log(events[0] ? events[0].title : 'No data'));
   }, []);
 
@@ -278,6 +278,7 @@ export default function TabTwoScreen() {
           </View>
         </View>
       )}
+
       <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
         <View
           style={{
@@ -290,6 +291,7 @@ export default function TabTwoScreen() {
             <Image
               style={styles.logo}
               source={require("@/assets/images/logo.png")}
+              accessibilityLabel="Application Logo"
             />
           </View>
           <View style={{ justifyContent: "center" }}>
@@ -298,6 +300,8 @@ export default function TabTwoScreen() {
                 styles.welcomeText,
                 { color: Colors[colorScheme ?? "light"].headerText },
               ]}
+              accessibilityRole="header"
+              accessibilityLabel="Welcome Text"
             >
               Consultez
             </Text>
@@ -306,6 +310,8 @@ export default function TabTwoScreen() {
                 styles.titleText,
                 { color: Colors[colorScheme ?? "light"].headerText },
               ]}
+              accessibilityRole="header"
+              accessibilityLabel="Title Text"
             >
               Votre programme
             </Text>
@@ -321,12 +327,14 @@ export default function TabTwoScreen() {
           renderItem={renderButton}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[{ alignItems: 'center' }, ]} 
+          contentContainerStyle={[{ alignItems: 'center' },]}
+          accessibilityRole="list"
+          accessibilityLabel="Filter Buttons List"
         />
       </View>
 
       {/* Le contenu principal de la page */}
-      <View style={{ flex: 1, marginLeft: 10, marginRight:10 }}>
+      <View style={{ flex: 1, marginLeft: 10, marginRight: 10 }}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           {filteredEvents.length > 0 ? (
             filteredEvents.map(event => (
@@ -334,34 +342,79 @@ export default function TabTwoScreen() {
                 <Image
                   source={require('@/assets/images/bandeau-1.png')}
                   style={{ width: '100%', height: 200, marginBottom: 10, borderColor: 'transparent' }}
+                  accessibilityLabel={`Banner image for ${event.title}`}
                 />
                 <View style={styles.eventInfos}>
-                    <Collapsible title={event.title}>
+                  <Collapsible title={event.title}>
                     <View>
-                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Description</Text>
-                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.description}</Text>
+                      <Text
+                        style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}
+                        accessibilityLabel={`Description of ${event.title}`}
+                      >
+                        Description
+                      </Text>
+                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>
+                        {event.description}
+                      </Text>
                     </View>
                     <View>
-                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Durée : </Text>
-                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.duration} minutes</Text>
+                      <Text
+                        style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}
+                        accessibilityLabel={`Duration of ${event.title}`}
+                      >
+                        Durée :
+                      </Text>
+                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>
+                        {event.duration} minutes
+                      </Text>
                     </View>
                     <View>
-                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Séances</Text>
+                      <Text
+                        style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}
+                        accessibilityLabel={`Sessions for ${event.title}`}
+                      >
+                        Séances
+                      </Text>
                       {event.showtimes.length > 0 ? event.showtimes.map(showtime => (
-                        <Text key={showtime.id} style={{ color: Colors[colorScheme ?? 'light'].text }}>{formatDate(showtime.time)} - {showtime.localisation}</Text>
-                      )) : <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>Pas de séance prévue</Text>}
+                        <Text
+                          key={showtime.id}
+                          style={{ color: Colors[colorScheme ?? 'light'].text }}
+                          accessibilityLabel={`Session at ${formatDate(showtime.time)} located at ${showtime.localisation}`}
+                        >
+                          {formatDate(showtime.time)} - {showtime.localisation}
+                        </Text>
+                      )) : (
+                        <Text
+                          style={{ color: Colors[colorScheme ?? 'light'].text }}
+                          accessibilityLabel={`No sessions scheduled for ${event.title}`}
+                        >
+                          Pas de séance prévue
+                        </Text>
+                      )}
                     </View>
                   </Collapsible>
                 </View>
-                <Pressable onPress={() => handleAdd(event._id)} style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}>
-                  <Text style={[styles.buyButtonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
+                <Pressable
+                  onPress={() => handleAdd(event._id)}
+                  style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}
+                  accessibilityLabel={`Add ${event.title} to planning`}
+                  accessibilityRole="button"
+                  accessibilityHint={`Adds ${event.title} to your planning schedule`}
+                >
+                  <Text
+                    style={[styles.buyButtonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}
+                  >
                     Ajouter au planning
                   </Text>
                 </Pressable>
               </View>
             ))
           ) : (
-            <Text>Aucun événement ne correspond à votre profil.</Text>
+            <Text
+              accessibilityLabel="No events match your profile"
+            >
+              Aucun événement ne correspond à votre profil.
+            </Text>
           )}
         </ScrollView>
       </View>
