@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
+  Modal,
   Text,
   ScrollView,
   StyleSheet,
   TouchableWithoutFeedback,
   TouchableOpacity,
   ActivityIndicator,
+  AccessibilityInfo,
+  findNodeHandle
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface Event {
   _id: string;
@@ -22,12 +26,18 @@ interface Event {
 interface EventModalProps {
   visible: boolean;
   onClose: () => void;
+  openerRef: React.RefObject<React.ElementRef<typeof TouchableOpacity>>;
 }
 
-const EventModal: React.FC<EventModalProps> = ({ visible, onClose }) => {
+const EventModal: React.FC<EventModalProps> = ({ visible, onClose, openerRef }) => {
   const colorScheme = useColorScheme();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  const consultezRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
+
+  const modalRef = useRef<View>(null);
+  const titleRef = useRef<View>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -45,77 +55,160 @@ const EventModal: React.FC<EventModalProps> = ({ visible, onClose }) => {
         setLoading(false);
       }
     };
-
     if (visible) {
       fetchEvents();
+      setTimeout(() => {
+        if (modalRef.current) {
+          const node = findNodeHandle(modalRef.current);
+          if (node) {
+            AccessibilityInfo.setAccessibilityFocus(node);
+          }
+        }
+      }, 100);
     }
   }, [visible]);
 
-  if (!visible) return null;
+  const handleClose = () => {
+    onClose();
+    // Optionally, set focus back to the opener element
+    if (openerRef.current) {
+      const node = findNodeHandle(openerRef.current);
+      if (node) {
+        AccessibilityInfo.setAccessibilityFocus(node);
+      }
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const setFocus = () => {
+        setTimeout(() => {
+          if (consultezRef.current) {
+            const nodeHandle = findNodeHandle(consultezRef.current);
+            if (nodeHandle) {
+              AccessibilityInfo.setAccessibilityFocus(nodeHandle);
+            }
+          }
+        }, 100);
+      };
+      setFocus();
+    }, [])
+  );
+
+  // if (!visible) return null;
 
   return (
-    <View style={styles.overlay}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.background} />
-      </TouchableWithoutFeedback>
-      <View
-        style={[
-          styles.modalContent,
-          { backgroundColor: Colors[colorScheme ?? 'light'].tint },
-        ]}
-      >
-        <Text
-          style={[
-            styles.modalTitle,
-            { color: Colors[colorScheme ?? 'light'].headerText },
-          ]}
-        >
-          Événements du Festival
-        </Text>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={handleClose}
+      accessible={true}
+      accessibilityViewIsModal={true}
+      accessibilityLabel="Contenu de la modal des événements"
+    >
 
-        {loading ? (
-          <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].headerText} />
-        ) : events.length > 0 ? (
-          <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }}>
-            {events.map((event) => (
-              <View key={event._id} style={styles.eventItem}>
-                <Text
-                  style={[
-                    styles.eventTitle,
-                    { color: Colors[colorScheme ?? 'light'].headerText },
-                  ]}
-                >
-                  {event.title}
-                </Text>
-                <Text
-                  style={[
-                    styles.eventDetails,
-                    { color: Colors[colorScheme ?? 'light'].text },
-                  ]}
-                >
-                  {event.date}{'\n'}
-                  {event.location}{'\n'}
-                  Tarif: 15€
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
-        ) : (
+      <View style={styles.overlay}
+      >
+        <TouchableWithoutFeedback onPress={onClose}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Fermer la modal">
+          <View style={styles.background} />
+        </TouchableWithoutFeedback>
+        <View
+          style={[
+            styles.modalContent,
+            { backgroundColor: Colors[colorScheme ?? 'light'].tint },
+          ]}
+          ref={modalRef}
+        // accessible={true}
+        // // accessibilityRole="dialog"
+        // accessibilityViewIsModal={true}
+        // accessibilityLabel="Contenu de la modal des événements"
+        >
           <Text
             style={[
-              styles.noEventsText,
-              { color: Colors[colorScheme ?? 'light'].text },
+              styles.modalTitle,
+              { color: Colors[colorScheme ?? 'light'].headerText },
             ]}
-          >
-            Aucun événement disponible.
-          </Text>
-        )}
+            ref={consultezRef}
+            accessible={true}
+            accessibilityRole="header"
+            accessibilityLabel="Titre des événements du Festival"
 
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>Fermer</Text>
-        </TouchableOpacity>
+          >
+            Événements du Festival
+          </Text>
+
+          {loading ? (
+            <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].headerText}
+              accessible={true}
+              accessibilityLabel="Chargement des événements" />
+          ) : events.length > 0 ? (
+            <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }}
+            // accessible={true}
+            // accessibilityRole="scrollbar"
+            // accessibilityLabel="Liste des événements"
+            >
+              {events.map((event) => (
+                <View key={event._id} style={styles.eventItem}>
+                  <Text
+                    style={[
+                      styles.eventTitle,
+                      { color: Colors[colorScheme ?? 'light'].headerText },
+                    ]}
+                    accessible={true}
+                    accessibilityRole="header"
+                    accessibilityLabel={`Titre de l'événement: ${event.title}`}
+                  >
+                    {event.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.eventDetails,
+                      { color: Colors[colorScheme ?? 'light'].text },
+                    ]}
+                    accessible={true}
+                    accessibilityRole="text"
+                    accessibilityLabel={`Date: ${event.date}, Lieu: ${event.location}, Tarif: 15€`}
+                  >
+                    {event.date}{'\n'}
+                    {event.location}{'\n'}
+                    Tarif: 15€
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          ) : (
+            <Text
+              style={[
+                styles.noEventsText,
+                { color: Colors[colorScheme ?? 'light'].text },
+              ]}
+              accessible={true}
+              accessibilityRole="text"
+              accessibilityLabel="Aucun événement disponible"
+            >
+              Aucun événement disponible.
+            </Text>
+          )}
+
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer le modal"
+            accessibilityHint="Appuyez pour fermer la fenêtre des événements"
+          >
+            <Text style={styles.closeButtonText}
+            // accessible={true}
+            // accessibilityRole="text"
+            // accessibilityLabel="Fermer"
+            >Fermer</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 };
 

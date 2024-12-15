@@ -42,14 +42,26 @@ const AnimatedCarousel: React.FC<AnimatedCarouselProps> = ({ items }) => {
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
+        accessible={true}
+        // accessibilityRole="adjustable"
+        accessibilityLabel={`Carrousel, élément ${currentIndex + 1} sur ${items.length}`}
+        accessibilityHint="Glissez vers la gauche ou la droite pour naviguer à travers les éléments"
       >
         {items.map((item, index) => (
-          <View key={index} style={{ width }}>
-            {item}
+          <View key={index} style={{ width }} accessible={false}>
+            {React.cloneElement(item, {
+              accessible: true,
+              accessibilityLabel: `Slide ${index + 1} sur ${items.length}: ${item.props.accessibilityLabel}`,
+            })}
           </View>
         ))}
       </ScrollView>
-      <View style={styles.indicatorContainer}>
+      <View
+        style={styles.indicatorContainer}
+        accessible={true}
+        accessibilityRole="none"
+        accessibilityLabel={`Page ${currentIndex + 1} sur ${items.length}`}
+      >
         {items.map((_, index) => (
           <View
             key={index}
@@ -57,6 +69,10 @@ const AnimatedCarousel: React.FC<AnimatedCarouselProps> = ({ items }) => {
               styles.indicator,
               index === currentIndex ? styles.activeIndicator : null,
             ]}
+            accessible={true}
+            accessibilityRole="none"
+            accessibilityLabel={`Indicateur ${index + 1} ${index === currentIndex ? 'actif' : ''}`}
+            accessibilityState={{ selected: index === currentIndex }}
           />
         ))}
       </View>
