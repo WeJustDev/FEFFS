@@ -5,12 +5,17 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import EventModal from '@/components/EventModal';
 import PurchaseModal from '@/components/PurchaseModal';
+import Thankyou from '@/components/Thankyou';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 export default function Billeterie() {
   const colorScheme = useColorScheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [purchaseModalVisible, setPurchaseModalVisible] = useState(false);
-  
+  const [thankyouModalVisible, setThankyouModalVisible] = useState(false);
+
   const carouselItems = [
     <View
       key="1"
@@ -23,9 +28,12 @@ export default function Billeterie() {
         alignSelf: 'center'
       }}
     >
-      <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+      <Text style={{ color: Colors[colorScheme ?? 'light'].headerText, width: '50%' }}>
         Seulement 6,50€ par séance et pour toutes les séances !
       </Text>
+      <MaterialIcons name="movie-filter" size={60} color={Colors[colorScheme ?? 'light'].dateTagText} />
+      </View>
     </View>,
     <View
       key="2"
@@ -38,9 +46,12 @@ export default function Billeterie() {
         alignSelf: 'center'
       }}
     >
-      <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>
+       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+      <Text style={{ color: Colors[colorScheme ?? 'light'].headerText, width: '50%' }}>
         Un accès coupe-file à toutes les séances et événements du festival.
       </Text>
+      <FontAwesome6 name="person-running" size={60} color={Colors[colorScheme ?? 'light'].dateTagText} />   
+      </View>
     </View>,
     <View
       key="3"
@@ -53,11 +64,19 @@ export default function Billeterie() {
         alignSelf: 'center'
       }}
     >
-      <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>
-        Des tarifs réduits à la Master Class ainsi que pour la nuit excentrique.
-      </Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+        <Text style={{ color: Colors[colorScheme ?? 'light'].headerText, width: '50%' }}>
+          Des tarifs réduits à la Master Class ainsi que pour la nuit excentrique.
+        </Text>
+        <AntDesign name="tags" size={60} color={Colors[colorScheme ?? 'light'].dateTagText} />
+      </View>
     </View>,
   ];
+
+  function handlePurchaseSuccess(): void {
+    setPurchaseModalVisible(false);
+    setThankyouModalVisible(true);
+  }
 
   return (
     <ScrollView
@@ -74,7 +93,33 @@ export default function Billeterie() {
       <PurchaseModal
         visible={purchaseModalVisible}
         onClose={() => setPurchaseModalVisible(false)}
+        onPurchaseSuccess={handlePurchaseSuccess}
       />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={thankyouModalVisible}
+        onRequestClose={() => {
+          setThankyouModalVisible(!thankyouModalVisible);
+        }}
+      >
+        <Thankyou />
+        <Pressable
+          style={{
+            position: 'absolute',
+            bottom: 20,
+            left: 20,
+            right: 20,
+            padding: 20,
+            backgroundColor: Colors[colorScheme ?? 'light'].button,
+            borderRadius: 10,
+            alignItems: 'center',
+          }}
+          onPress={() => setThankyouModalVisible(!thankyouModalVisible)}
+        >
+          <Text style={{ color: Colors[colorScheme ?? 'light'].headerText, fontWeight: 'bold' }}>Fermer</Text>
+        </Pressable>
+      </Modal>
       <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
           <View style={styles.logoContainer}>

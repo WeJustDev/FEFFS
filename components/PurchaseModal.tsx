@@ -1,31 +1,49 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal, ScrollView, Alert } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Picker } from '@react-native-picker/picker';
 import { ImgPicker } from './ImagePicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+type Pass = {
+  number?: number;
+  email: string;
+  birthdate: string;
+  image: string;
+  lastname: string;
+  firstname: string;
+  _id?: string;
+  __v?: number;
+};
 
 type PurchaseModalProps = {
   visible: boolean;
   onClose: () => void;
+  onPassGenerated?: (pass: any) => void;
+  onPurchaseSuccess?: () => void;
 };
 
-const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
+const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassGenerated, onPurchaseSuccess }) => {
   const colorScheme = useColorScheme();
+  const [base64Image, setBase64Image] = useState<string | null>(null);
   const [imageSelected, setImageSelected] = useState<boolean>(false);
   const [prenom, setPrenom] = useState('');
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
 
-  // Ajoutez les états pour le jour, le mois et l'année
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
 
-  // Mettez à jour isFormComplete
   const isFormComplete = prenom && nom && email && day && month && year && imageSelected;
 
   const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const resetForm = () => {
     setImageSelected(false);
     setDay('');
     setMonth('');
@@ -33,19 +51,74 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
     setEmail('');
     setNom('');
     setPrenom('');
-    onClose();
+    setBase64Image(null);
   };
 
-  const handleSubmit = () => {
-    const dateNaissance = `${day}/${month}/${year}`;
-    console.log('Proceeding to payment...');
-    console.log('Prenom:', prenom);
-    console.log('Nom:', nom);
-    console.log('Email:', email);
-    console.log('Date de naissance:', dateNaissance);
-    console.log('Image selected:', imageSelected);
-    // Réinitialisez les champs si nécessaire
-    handleClose();
+    const handleSubmit = async () => {
+    if (!isFormComplete) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      return;
+    }
+  
+    try {
+      const dateNaissance = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  
+      console.log('Formatted birthdate:', dateNaissance);
+  
+      const requestBody = {
+        lastname: nom,
+        firstname: prenom,
+        email: email,
+        birthdate: dateNaissance,
+        image: base64Image,
+      };
+  
+      console.log('Request body:', requestBody);
+  
+      // Appel à la base de données commentés pour éviter les erreurs
+      // const response = await fetch("https://feffs.elioooooo.fr/pass/add", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(requestBody),
+      // });
+  
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', response.headers);
+  
+      // if (!response.ok) {
+      //   const errorText = await response.text();
+      //   console.error('Server response:', errorText);
+      //   throw new Error(`Erreur lors de la création du pass: ${errorText}`);
+      // }
+  
+      // const passData = await response.json();
+      // console.log('Pass data received:', passData);
+  
+      const passData = requestBody;
+  
+      await AsyncStorage.setItem("pass", JSON.stringify(passData));
+      await AsyncStorage.setItem("name", nom);
+      await AsyncStorage.setItem("firstname", prenom);
+      await AsyncStorage.setItem("email", email);
+      await AsyncStorage.setItem("birthdate", dateNaissance);
+      await AsyncStorage.setItem("image", base64Image || '');
+  
+      if (onPassGenerated) {
+        onPassGenerated(passData);
+      }
+      if (onPurchaseSuccess) {
+        onPurchaseSuccess();
+      }
+  
+      resetForm();
+      onClose();
+  
+    } catch (error) {
+      console.error("Erreur de génération du pass:", error);
+      Alert.alert('Erreur', 'Impossible de générer le pass. Veuillez réessayer.');
+    }
   };
 
   return (
@@ -75,7 +148,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
         </View>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
 
-          <ImgPicker onImageSelected={(uri) => setImageSelected(!!uri)} />
+          <ImgPicker onImageSelected={(base64) => {
+            setImageSelected(!!base64);
+            setBase64Image(base64);
+          }} />
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
@@ -120,54 +196,51 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
           </View>
 
           <View style={styles.inputContainer}>
-      <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-        Date de naissance :
-      </Text>
-      <View style={styles.datePickerContainer}>
-        {/* Picker pour le jour */}
-        <Picker
-          selectedValue={day}
-          onValueChange={(value: string) => setDay(value)}
-          style={styles.picker}
-          itemStyle={styles.pickerItem} // Ajoutez ceci
-          mode="dropdown" // Optionnel : pour un style cohérent
-        >
-          <Picker.Item label="Jour" value="" />
-          {[...Array(31)].map((_, i: number) => (
-            <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
-          ))}
-        </Picker>
+            <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              Date de naissance :
+            </Text>
+            <View style={styles.datePickerContainer}>
+              <Picker
+                selectedValue={day}
+                onValueChange={(value: string) => setDay(value)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem}
+                mode="dropdown"
+              >
+                <Picker.Item label="Jour" value="" />
+                {[...Array(31)].map((_, i: number) => (
+                  <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
+                ))}
+              </Picker>
 
-        {/* Picker pour le mois */}
-        <Picker
-          selectedValue={month}
-          onValueChange={(value: string) => setMonth(value)}
-          style={styles.picker}
-          itemStyle={styles.pickerItem} // Ajoutez ceci
-          mode="dropdown" // Optionnel
-        >
-          <Picker.Item label="Mois" value="" />
-          {[...Array(12)].map((_, i) => (
-            <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
-          ))}
-        </Picker>
+              <Picker
+                selectedValue={month}
+                onValueChange={(value: string) => setMonth(value)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem}
+                mode="dropdown"
+              >
+                <Picker.Item label="Mois" value="" />
+                {[...Array(12)].map((_, i) => (
+                  <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
+                ))}
+              </Picker>
 
-        {/* Picker pour l'année */}
-        <Picker
-          selectedValue={year}
-          onValueChange={(value: string) => setYear(value)}
-          style={styles.picker}
-          itemStyle={styles.pickerItem} // Ajoutez ceci
-          mode="dropdown" // Optionnel
-        >
-          <Picker.Item label="Année" value="" />
-          {Array.from({ length: 100 }, (_, i: number) => {
-            const yr: number = new Date().getFullYear() - i;
-            return <Picker.Item key={yr} label={`${yr}`} value={`${yr}`} />;
-          })}
-        </Picker>
-      </View>
-    </View>
+              <Picker
+                selectedValue={year}
+                onValueChange={(value: string) => setYear(value)}
+                style={styles.picker}
+                itemStyle={styles.pickerItem}
+                mode="dropdown"
+              >
+                <Picker.Item label="Année" value="" />
+                {Array.from({ length: 100 }, (_, i: number) => {
+                  const yr: number = new Date().getFullYear() - i;
+                  return <Picker.Item key={yr} label={`${yr}`} value={`${yr}`} />;
+                })}
+              </Picker>
+            </View>
+          </View>
 
           <View style={styles.passDetailsContainer}>
             <Text style={[styles.passDetailsTitle, { color: Colors[colorScheme ?? 'light'].headerText }]}>
@@ -218,11 +291,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
                     : Colors[colorScheme ?? 'light'].cardDarkBg,
                 },
               ]}
-              onPress={() => {
-                if (isFormComplete) {
-                  handleSubmit();
-                }
-              }}
+              onPress={handleSubmit}
             >
               <Text style={{
                 color: isFormComplete
@@ -247,9 +316,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose }) => {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    paddingTop: 40,
     paddingHorizontal: 25,
-    backgroundColor: Colors.light.pageBg, // Ensure consistent background
+    backgroundColor: Colors.light.pageBg,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -280,7 +348,7 @@ const styles = StyleSheet.create({
   },
   pickerItem: {
     fontSize: 16,
-    height: 44, // Hauteur de chaque item
+    height: 44,
   },
   logo: {
     width: '100%',
@@ -317,11 +385,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 15,
     fontSize: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   passDetailsContainer: {
     backgroundColor: 'rgba(255,255,255,0.05)',
