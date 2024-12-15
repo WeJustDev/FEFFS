@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, FlatList, Button, View, Text } from 'react-native';
+import { StyleSheet, FlatList, Button, View, Text, Pressable, ScrollView } from 'react-native';
 import { Image } from 'react-native';
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { Colors } from "@/constants/Colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { Collapsible } from '@/components/Collapsible';
 import { ExternalLink } from '@/components/ExternalLink';
@@ -9,8 +12,13 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
+
 // Données des boutons de tri
 const buttons = [
+  {
+    id: "",
+    title: "Tout voir",
+  },
   {
     id: "1",
     title: "Palmarès",
@@ -24,86 +32,6 @@ const buttons = [
     title: "Rétrospectives",
   },
 ];
-
-// Données des événements 
-// const events = [
-//   {
-//     id: "1",
-//     title: "Les 3 petits cochons",
-//     description: "Les 3 petits cochons est un conte traditionnel européen qui figure parmi les contes les plus célèbres. Il est classé dans l'index Aarne-Thompson dans la catégorie 124.",
-//     filename: "3-petits-cochons.jpg",
-//     duration: "90",
-//     showtimes: [
-//       { id: "7", time: new Date('2024-09-15T14:00:00'), localisation: 'Cinéma 1' },
-//       { id: "8", time: new Date('2024-09-16T16:00:00'), localisation: 'Cinéma 2' }
-//     ],
-//     category: "1"
-//   },
-//   {
-//     id: "2",
-//     title: "Le Petit Prince",
-//     description: "Le Petit Prince est un conte poétique et philosophique écrit par Antoine de Saint-Exupéry.",
-//     filename: "le-petit-prince.jpg",
-//     duration: "120",
-//     showtimes: [],
-//     category: "2"
-//   },
-//   {
-//     id: "3",
-//     title: "Cendrillon",
-//     description: "Cendrillon est un conte populaire dont il existe de nombreuses versions à travers le monde.",
-//     filename: "cendrillon.jpg",
-//     duration: "95",
-//     showtimes: [
-//       { id: "5", time: new Date('2024-09-15T14:00:00'), localisation: 'Cinéma 1' },
-//       { id: "6", time: new Date('2024-09-16T16:00:00'), localisation: 'Cinéma 2' }
-//     ],
-//     category: "3"
-//   },
-//   {
-//     id: "4",
-//     title: "Blanche-Neige",
-//     description: "Blanche-Neige est un conte de fées allemand rendu célèbre par les frères Grimm.",
-//     filename: "blanche-neige.jpg",
-//     duration: "85",
-//     showtimes: [],
-//     category: "1"
-//   },
-//   {
-//     id: "5",
-//     title: "Le Chat Botté",
-//     description: "Le Chat Botté est un conte populaire européen, notamment rendu célèbre par Charles Perrault.",
-//     filename: "le-chat-botte.jpg",
-//     duration: "100",
-//     showtimes: [
-//       { id: "3", time: new Date('2024-11-02T11:30:00'), localisation: 'Cinéma 1' },
-//       { id: "4", time: new Date('2024-09-16T16:00:00'), localisation: 'Cinéma 2' }
-//     ],
-//     category: "2"
-//   },
-//   {
-//     id: "6",
-//     title: "La Belle au bois dormant",
-//     description: "La Belle au bois dormant est un conte de fées classique qui a été popularisé par Charles Perrault.",
-//     filename: "la-belle-au-bois-dormant.jpg",
-//     duration: "110",
-//     showtimes: [
-//       { id: "1", time: new Date('2024-09-15T14:00:00'), localisation: 'Cinéma 1' },
-//       { id: "2", time: new Date('2024-09-16T16:00:00'), localisation: 'Cinéma 2' }
-//     ],
-//     category: "3"
-//   },
-//   {
-//     id: "7",
-//     title: "Hansel et Gretel",
-//     description: "Hansel et Gretel est un conte de fées allemand recueilli par les frères Grimm.",
-//     filename: "hansel-et-gretel.jpg",
-//     duration: "90",
-//     showtimes: [],
-//     category: "1"
-//   }
-// ];
-
 
 
 type Event = {
@@ -119,6 +47,18 @@ type Event = {
 export default function TabTwoScreen() {
   const [events, setEvents] = useState<Event[]>([]);
 
+  const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
+  const [filteredEvents, setFilteredEvents] = useState(events);
+
+  // État de gestion des programmes
+  const [userProgramId, setUserProgramId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [notification, setNotification] = useState<boolean>(false);
+
+  const colorScheme = useColorScheme();
+
+
   useEffect(() => {
     fetch('https://feffs.elioooooo.fr/event/get')
       .then(response => response.json())
@@ -127,8 +67,7 @@ export default function TabTwoScreen() {
       .then(() => console.log(events[0] ? events[0].title : 'No data'));
   }, []);
 
-  const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
-  const [filteredEvents, setFilteredEvents] = useState(events); // Initialement, on affiche tous les événements
+
   useEffect(() => {
     if (!selectedButtonId) {
       setFilteredEvents(events);
@@ -159,13 +98,29 @@ export default function TabTwoScreen() {
   };
 
   // Fonction de rendu des boutons de tri
-  const renderButton = ({ item }: { item: typeof buttons[0] }) => (
-    <Button
-      title={item.title}
-      onPress={() => setSelectedButtonId(item.id)}
-      color={selectedButtonId === item.id ? '#007BFF' : '#808080'} // Coloration du bouton actif
-    />
-  );
+  const renderButton = ({ item }: { item: typeof buttons[0] }) => {
+    const isSelected = selectedButtonId === item.id;
+
+    return (
+      <Pressable
+        onPress={() => setSelectedButtonId(item.id)}
+        style={[
+          styles.filterButton,
+          {
+            backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg,
+            borderColor: isSelected ? Colors[colorScheme ?? 'light'].dateTagText : 'transparent',
+          }
+        ]}
+      >
+        <Text style={[
+          styles.filterButtonText,
+          { color: Colors[colorScheme ?? 'light'].dateTagText }
+        ]}>
+          {item.title}
+        </Text>
+      </Pressable>
+    );
+  };
 
   // Fonction pour formater la date
   const formatDate = (date: Date): string => {
@@ -180,125 +135,314 @@ export default function TabTwoScreen() {
     return `${dayOfWeek} ${day}.${month} ${hours}h${minutes}`;
   };
 
+
+  const handleAdd = async (eventId: string) => {
+    try {
+      const userEmail = await AsyncStorage.getItem("email");
+      if (!userEmail) throw new Error("Vous devez être connecté pour ajouter un évènement à votre programme");
+
+      const userIdResponse = await fetch('https://feffs.elioooooo.fr/user/get/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail })
+      });
+
+      const { userId } = await userIdResponse.json();
+
+      const userProgramResponse = await fetch('https://feffs.elioooooo.fr/program/get/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+
+      let programId = null;
+      if (userProgramResponse.status === 200) {
+        const programData = await userProgramResponse.json();
+        programId = programData._id;
+      } else {
+        const newProgramResponse = await fetch('https://feffs.elioooooo.fr/program/add/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        const newProgramData = await newProgramResponse.json();
+        programId = newProgramData._id;
+      }
+
+      const addEventResponse = await fetch(`https://feffs.elioooooo.fr/program/add-event/${programId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: eventId })
+      });
+
+      if (addEventResponse.status === 200) {
+        setError("Évènement ajouté au programme avec succès");
+      } else {
+        throw new Error("Erreur lors de l'ajout de l'évènement au programme");
+      }
+    } catch (error: any) {
+      setError(error.message);
+    }
+    setHasError(true);
+    setNotification(true); // Activer la notification ici
+  };
+
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
+    <>
+      {notification && (
+        <View style={{ width: "100%", padding: 10, position: "absolute" }}>
+          <View
+            style={[
+              styles.notification,
+              {
+                zIndex: 20,
+                backgroundColor: Colors[colorScheme ?? "light"].background,
+              },
+            ]}
+          >
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                width: "100%",
+                gap: 20,
+                flex: 1,
+              }}
+            >
+              <View style={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
+                {error && error.startsWith("Erreur") ? (
+                  <Text
+                    style={[
+                      styles.message,
+                      { color: Colors[colorScheme ?? "light"].texterror, flex: 1 },
+                    ]}
+                  >
+                    Erreur...
+                  </Text>
+                ) : (
+                  <Text
+                    style={[
+                      styles.message,
+                      { color: Colors[colorScheme ?? "light"].textsuccess, flex: 1 },
+                    ]}
+                  >
+                    Succès !
+                  </Text>
+                )}
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: 5,
+                    flex: 1,
+                  }}
+                >
+                  {error && error.startsWith("Erreur") ? (
+                    <IconSymbol
+                      name="error.fill"
+                      size={16}
+                      color={Colors[colorScheme ?? "light"].texterror}
+                    />
+                  ) : (
+                    <IconSymbol
+                      name="checkmark"
+                      size={16}
+                      color={Colors[colorScheme ?? "light"].textsuccess}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.message,
+                      { color: Colors[colorScheme ?? "light"].text, flex: 1, textAlign: "left" },
+                    ]}
+                  >
+                    {error}
+                  </Text>
+                </View>
+              </View>
+              <Pressable onPress={() => setNotification(false)}>
+                <Text
+                  style={[
+                    styles.message,
+                    { color: Colors[colorScheme ?? "light"].text },
+                  ]}
+                >
+                  ✖
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
+      <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          <View style={styles.logoContainer}>
+            <Image
+              style={styles.logo}
+              source={require("@/assets/images/logo.png")}
+            />
+          </View>
+          <View style={{ justifyContent: "center" }}>
+            <Text
+              style={[
+                styles.welcomeText,
+                { color: Colors[colorScheme ?? "light"].headerText },
+              ]}
+            >
+              Consultez
+            </Text>
+            <Text
+              style={[
+                styles.titleText,
+                { color: Colors[colorScheme ?? "light"].headerText },
+              ]}
+            >
+              Votre programme
+            </Text>
+          </View>
+        </View>
+      </View>
 
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Programmation</ThemedText>
-      </ThemedView>
-      <ThemedText>FEFFS 2024</ThemedText>
-
-      <View style={styles.container}>
-
+      {/* boutton pour filtrer */}
+      <View style={{ height: 80, marginBottom: 20 }}>
         <FlatList
           data={buttons}
           keyExtractor={(item) => item.id}
           renderItem={renderButton}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.buttonContainer}
+          contentContainerStyle={[{ alignItems: 'center' }, ]} 
         />
-        
-
-        
-        {filteredEvents.length > 0 ? (
-          console.log('filtered : ' + filteredEvents),
-          filteredEvents.map(event => (
-            <View key={event._id} style={styles.eventCard}>
-              <Collapsible title={event.title}>
-                <Image
-                  source={{ uri: `path/to/images/${event.filename}` }}
-                  style={{ width: '100%', height: 200, marginBottom: 10, borderColor: '#f0f0f0', borderWidth: 1 }}
-                />
-                <View style={styles.eventCard}>
-                  <Text>Description</Text>
-                  <Text>{event.description}</Text>
-                </View>
-
-                <Text style={styles.eventCard}>Durée : {event.duration} minutes</Text>
-                <View style={styles.eventCard}>
-                  <Text>Séances</Text>
-                  {event.showtimes.length > 0 ? event.showtimes.map(showtime => (
-                    <Text key={showtime.id} >{formatDate(showtime.time)} - {showtime.localisation}</Text>
-                  ))
-                  : <Text >Pas de séance prévue</Text>
-                  }
-                </View>
-              </Collapsible>
-              <Button
-                title="Ajouter à mon agenda"
-                onPress={() => { }}
-                // Coloration du bouton actif
-              />
-            </View>
-          ))
-        ) : (
-          <Text style={styles.noEventsText}>Aucun événement ne correspond à votre profil.</Text>
-        )}
       </View>
-    </ParallaxScrollView>
+
+      {/* Le contenu principal de la page */}
+      <View style={{ flex: 1, marginLeft: 10, marginRight:10 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map(event => (
+              <View key={event._id} >
+                <Image
+                  source={require('@/assets/images/bandeau-1.png')}
+                  style={{ width: '100%', height: 200, marginBottom: 10, borderColor: 'transparent' }}
+                />
+                <View style={styles.eventInfos}>
+                    <Collapsible title={event.title}>
+                    <View>
+                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Description</Text>
+                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.description}</Text>
+                    </View>
+                    <View>
+                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Durée : </Text>
+                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.duration} minutes</Text>
+                    </View>
+                    <View>
+                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Séances</Text>
+                      {event.showtimes.length > 0 ? event.showtimes.map(showtime => (
+                        <Text key={showtime.id} style={{ color: Colors[colorScheme ?? 'light'].text }}>{formatDate(showtime.time)} - {showtime.localisation}</Text>
+                      )) : <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>Pas de séance prévue</Text>}
+                    </View>
+                  </Collapsible>
+                </View>
+                <Pressable onPress={() => handleAdd(event._id)} style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}>
+                  <Text style={[styles.buyButtonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
+                    Ajouter au planning
+                  </Text>
+                </Pressable>
+              </View>
+            ))
+          ) : (
+            <Text>Aucun événement ne correspond à votre profil.</Text>
+          )}
+        </ScrollView>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  logoContainer: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    boxShadow: "0px 0px 80px rgba(255, 255, 255, 1)",
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  logo: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
   },
-  container: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
+  welcomeText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "bold",
   },
-  title: {
+  titleText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
+    lineHeight: 20,
+    fontWeight: "bold",
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  button: {
-    borderRadius: 5,
+  notification: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
     padding: 10,
-    marginHorizontal: 8,
+    width: "95%",
+    borderRadius: 5,
+    left: 0,
+    marginTop: 50,
+    marginLeft: "auto",
+    marginRight: "auto",
+    zIndex: 20,
   },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
+  message: {
+    textAlign: "center",
+    paddingBottom: 10,
   },
-  eventCard: {
-    backgroundColor: '#f0f0f0',
-    padding: 16,
-    borderRadius: 8,
+  addButton: {
+    backgroundColor: "transparent",
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "transparent",
     marginBottom: 10,
   },
-  eventName: {
+  buyButtonText: {
     fontSize: 16,
-    color: '#333',
+    fontWeight: 'bold',
   },
-  noEventsText: {
-    fontSize: 14,
-    color: '#999',
+  eventInfos: {
+    backgroundColor: "transparent",
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#d35446",
+    marginTop: 0,
+    marginBottom: 10,
+  },
+  filterButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  filterButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
-  },
+  }
 });
+
