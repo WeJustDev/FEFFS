@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ImageBackground, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, ImageBackground, TouchableOpacity, Image, AccessibilityInfo, findNodeHandle } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SignUpScreen from '@/components/SignUpForm';
 import LogoutButton from '@/components/LogoutButton';
@@ -16,6 +16,24 @@ type ColorScheme = 'light' | 'dark';
 
 // Header component with logo and welcome text
 const Header = ({ colorScheme }: { colorScheme: ColorScheme }) => {
+  const consultezRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const setFocus = () => {
+        setTimeout(() => {
+          if (consultezRef.current) {
+            const nodeHandle = findNodeHandle(consultezRef.current);
+            if (nodeHandle) {
+              AccessibilityInfo.setAccessibilityFocus(nodeHandle);
+            }
+          }
+        }, 100);
+      };
+      setFocus();
+    }, [])
+  );
+
   return (
     <ImageBackground source={require('@/assets/images/2414.jpg')} style={styles.header} accessible={true}
       accessibilityLabel="Arrière-plan de l'en-tête">
@@ -27,7 +45,9 @@ const Header = ({ colorScheme }: { colorScheme: ColorScheme }) => {
         accessibilityLabel="Logo FEFFS"
         accessibilityRole="image"
       />
-      <Text style={[styles.welcomeText, { color: Colors[colorScheme ?? 'light'].text }]} accessible={true}
+      <Text style={[styles.welcomeText, { color: Colors[colorScheme ?? 'light'].text }]} 
+        ref={consultezRef}
+        accessible={true}
         accessibilityRole="header"
         accessibilityLabel="Bienvenue sur l'application FEFFS">
         Bienvenue sur l'app FEFFS
@@ -46,6 +66,8 @@ export default function Index() {
   const [psw, setPsw] = useState("");
   const [hasPass, setHasPass] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -94,6 +116,8 @@ export default function Index() {
     console.log('Acheter bouton pressé');
     // logique de redirect
   };
+
+  
 
 
   if (isLoggedIn) {

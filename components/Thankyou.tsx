@@ -7,11 +7,20 @@ const Thankyou: React.FC = () => {
   const colorScheme = useColorScheme();
   
   return (
-    <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].pageBg }]}>
-      <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+    <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].pageBg }]}
+      accessible={true}
+      accessibilityRole="header"
+      accessibilityLabel="Page de remerciement">
+      <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].headerText }]}
+        accessible={true}
+        accessibilityRole="header"
+        accessibilityLabel="Message de remerciement">
         Merci pour votre achat !
       </Text>
-      <Text style={[styles.description, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+      <Text style={[styles.description, { color: Colors[colorScheme ?? 'light'].headerText }]}
+        accessible={true}
+        accessibilityRole="text"
+        accessibilityLabel="Description du pass festival">
         Nous espérons que vous profiterez pleinement de votre pass pour le Festival Européen du Film Fantastique.
       </Text>
     </View>
