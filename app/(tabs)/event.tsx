@@ -104,6 +104,7 @@ export default function Event() {
       setError(error.message);
     }
     setHasError(true);
+    setNotification(true);
   };
 
   return (
