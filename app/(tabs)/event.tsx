@@ -269,7 +269,7 @@ export default function Event() {
                   { borderBottomColor: Colors[colorScheme ?? 'light'].dateTagBg },
                   { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }
                 ]}
-                accessibilityRole="article"
+              
                 accessibilityLabel={`Évènement : ${event.title}`}
               >
                 <Text
@@ -341,7 +341,7 @@ export default function Event() {
                         styles.showtimeContainer,
                         { borderColor: Colors[colorScheme ?? 'light'].dateTagBg }
                       ]}
-                      accessibilityRole="group"
+                     
                       accessibilityLabel={`Séance le ${new Date(showtime.date).toLocaleDateString()} à ${showtime.localisation}`}
                     >
                       <Text
