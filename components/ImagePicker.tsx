@@ -5,12 +5,34 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 type ImgPickerProps = {
-  onImageSelected: (uri: string | null) => void;
+  onImageSelected: (base64: string | null) => void;
 };
 
 export function ImgPicker({ onImageSelected }: ImgPickerProps) {
   const [image, setImage] = useState<string | null>(null);
   const colorScheme = useColorScheme();
+
+  const convertImageToBase64 = async (uri: string): Promise<string | null> => {
+    try {
+      // Fetch the image
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // Convert blob to base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          resolve(base64data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return null;
+    }
+  };
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -23,14 +45,21 @@ export function ImgPicker({ onImageSelected }: ImgPickerProps) {
     if (!result.canceled) {
       const uri = result.assets[0].uri;
       setImage(uri);
-      onImageSelected(uri); // Notify the parent about the selected image
+      
+      // Convert image to base64
+      const base64Image = await convertImageToBase64(uri);
+      onImageSelected(base64Image);
     } else {
-      onImageSelected(null); // Notify the parent no image was selected
+      setImage(null);
+      onImageSelected(null);
     }
   };
 
   return (
     <View style={styles.container}>
+      <View style={styles.imageContainer}>
+        {image && <Image source={{ uri: image }} style={styles.image} />}
+      </View>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}
         onPress={pickImage}
@@ -39,9 +68,6 @@ export function ImgPicker({ onImageSelected }: ImgPickerProps) {
           Charger une image de votre tête
         </Text>
       </TouchableOpacity>
-      <View style={styles.imageContainer}>
-        {image && <Image source={{ uri: image }} style={styles.image} />}
-      </View>
     </View>
   );
 }
@@ -50,12 +76,13 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
   button: {
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 25,
-    marginBottom: 10,
+    marginTop: 10,
   },
   buttonText: {
     fontSize: 14,

@@ -17,6 +17,12 @@ const MAPPING = {
   'location.fill': 'location-on',
   'error.fill': 'error',
   'checkmark': 'check',
+  'delete.fill': 'delete-forever',
+  'event-note': 'event-note',
+  'event': 'event',
+  'add-shopping-cart': 'add-shopping-cart',
+  'qr-code-scanner': 'qr-code-scanner',
+  'announcement': 'announcement',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

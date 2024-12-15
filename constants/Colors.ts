@@ -10,8 +10,9 @@ export const Colors = {
   light: {
     text: '#11181C',
     textsecondary: '#687076',
-    background: '#f4f4f4', // Légèrement modifié pour le thème clair
+    background: '#e0dede', // Légèrement modifié pour le thème clair
     tint: '#d1d1d1',
+    placeholderText: '#a1a1a1', // Couleur pour le texte du placeholder en mode clair
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
@@ -32,6 +33,7 @@ export const Colors = {
     textsecondary: '#9BA1A6',
     background: '#151718',
     tint: '#252525',
+    placeholderText: '#5a5a5a', // Couleur pour le texte du placeholder en mode sombre
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
