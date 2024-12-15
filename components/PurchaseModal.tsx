@@ -126,6 +126,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
       transparent={false}
       visible={visible}
       onRequestClose={onClose}
+      accessible={true}
+      accessibilityLabel="Modal d'achat de Pass Festival"
+
     >
       <View style={[styles.modalContainer, { backgroundColor: Colors[colorScheme ?? 'light'].pageBg }]}>
         <View style={{ marginTop: 16, marginBottom: 12, paddingHorizontal: 20 }}>
@@ -133,14 +136,24 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
             <View style={styles.logoContainer}>
               <Image
                 style={styles.logo}
-                source={require('@/assets/images/logo.png')}
+                accessible={true}
+                accessibilityLabel="Logo de l'application FEFFS"
+                accessibilityRole="image"
               />
             </View>
             <View style={{ justifyContent: 'center' }}>
-              <Text style={[styles.welcomeText, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              <Text style={[styles.welcomeText, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                accessible={false}
+                accessibilityRole="header"
+                accessibilityLabel="Festival Européen du Film Fantastique"
+              >
                 Festival Européen du Film Fantastique
               </Text>
-              <Text style={[styles.titleText, { color: Colors[colorScheme ?? 'light'].headerText }]}>
+              <Text style={[styles.titleText, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                accessible={true}
+                accessibilityRole="header"
+                accessibilityLabel="Acheter un Pass"
+              >
                 Acheter un Pass
               </Text>
             </View>
@@ -151,7 +164,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
           <ImgPicker onImageSelected={(base64) => {
             setImageSelected(!!base64);
             setBase64Image(base64);
-          }} />
+          }}
+           />
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: Colors[colorScheme ?? 'light'].headerText }]}>
@@ -163,6 +177,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
               onChangeText={setPrenom}
               placeholder="Entrez votre prénom"
               placeholderTextColor={Colors[colorScheme ?? 'light'].placeholderText}
+              accessible={true}
+              accessibilityLabel="Champ pour le prénom"
+              accessibilityHint="Entrez votre prénom ici"
+              // autoFocus={true}
             />
           </View>
 
@@ -176,6 +194,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
               onChangeText={setNom}
               placeholder="Entrez votre nom"
               placeholderTextColor={Colors[colorScheme ?? 'light'].placeholderText}
+              accessible={true}
+              accessibilityLabel="Champ pour le nom"
+              accessibilityHint="Entrez votre nom ici"
+
             />
           </View>
 
@@ -192,6 +214,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
               placeholderTextColor={Colors[colorScheme ?? 'light'].placeholderText}
               keyboardType="email-address"
               autoCapitalize="none"
+              accessible={true}
+              accessibilityLabel="Champ pour l'email"
+              accessibilityHint="Entrez votre adresse email ici"
+
             />
           </View>
 
@@ -206,6 +232,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
                 style={styles.picker}
                 itemStyle={styles.pickerItem}
                 mode="dropdown"
+                accessible={true}
+                accessibilityLabel="Sélecteur de jour"
+                accessibilityHint="Choisissez votre jour de naissance"
               >
                 <Picker.Item label="Jour" value="" />
                 {[...Array(31)].map((_, i: number) => (
@@ -219,6 +248,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
                 style={styles.picker}
                 itemStyle={styles.pickerItem}
                 mode="dropdown"
+                accessible={true}
+                accessibilityLabel="Sélecteur de mois"
+                accessibilityHint="Choisissez votre mois de naissance"
               >
                 <Picker.Item label="Mois" value="" />
                 {[...Array(12)].map((_, i) => (
@@ -232,6 +264,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
                 style={styles.picker}
                 itemStyle={styles.pickerItem}
                 mode="dropdown"
+                accessible={true}
+                accessibilityLabel="Sélecteur d'année"
+                accessibilityHint="Choisissez votre année de naissance"
               >
                 <Picker.Item label="Année" value="" />
                 {Array.from({ length: 100 }, (_, i: number) => {
@@ -242,42 +277,90 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
             </View>
           </View>
 
-          <View style={styles.passDetailsContainer}>
-            <Text style={[styles.passDetailsTitle, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-              Détails du Pass Festival
-            </Text>
-
-            <View style={styles.passDetailRow}>
-              <Text style={[styles.passDetailLabel, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                Prix du Pass
-              </Text>
-              <Text style={[styles.passDetailValue, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                13€
-              </Text>
-            </View>
-
-            <View style={styles.passDetailRow}>
-              <Text style={[styles.passDetailLabel, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                Validité
-              </Text>
-              <Text style={[styles.passDetailValue, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                20-29 Sept 2024
-              </Text>
-            </View>
-
-            <View style={styles.passDetailRow}>
-              <Text style={[styles.passDetailLabel, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                Cinémas Partenaires
-              </Text>
-              <Text style={[styles.passDetailValue, { color: Colors[colorScheme ?? 'light'].headerText }]}>
-                5 Cinémas
-              </Text>
-            </View>
-          </View>
+                    <View
+                      style={styles.passDetailsContainer}
+                      accessibilityRole='summary'
+                      accessibilityLabel="Détails du Pass Festival"
+                    >
+                      <Text
+                        style={[styles.passDetailsTitle, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                        accessible={true}
+                        accessibilityLabel="Détails du Pass Festival"
+                      >
+                        Détails du Pass Festival
+                      </Text>
+                    
+                      <View
+                        style={styles.passDetailRow}
+                        accessible={true}
+                        accessibilityLabel="Prix du Pass, 13 euros"
+                      >
+                        <Text
+                          style={[styles.passDetailLabel, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                          accessible={true}
+                          accessibilityLabel="Prix du Pass"
+                        >
+                          Prix du Pass
+                        </Text>
+                        <Text
+                          style={[styles.passDetailValue, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                          accessible={true}
+                          accessibilityLabel="13 euros"
+                        >
+                          13€
+                        </Text>
+                      </View>
+                    
+                      <View
+                        style={styles.passDetailRow}
+                        accessible={true}
+                        accessibilityLabel="Validité, 20-29 Sept 2024"
+                      >
+                        <Text
+                          style={[styles.passDetailLabel, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                          accessible={true}
+                          accessibilityLabel="Validité"
+                        >
+                          Validité
+                        </Text>
+                        <Text
+                          style={[styles.passDetailValue, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                          accessible={true}
+                          accessibilityLabel="20-29 Sept 2024"
+                        >
+                          20-29 Sept 2024
+                        </Text>
+                      </View>
+                    
+                      <View
+                        style={styles.passDetailRow}
+                        accessible={true}
+                        accessibilityLabel="Cinémas Partenaires, 5 Cinémas"
+                      >
+                        <Text
+                          style={[styles.passDetailLabel, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                          accessible={true}
+                          accessibilityLabel="Cinémas Partenaires"
+                        >
+                          Cinémas Partenaires
+                        </Text>
+                        <Text
+                          style={[styles.passDetailValue, { color: Colors[colorScheme ?? 'light'].headerText }]}
+                          accessible={true}
+                          accessibilityLabel="5 Cinémas"
+                        >
+                          5 Cinémas
+                        </Text>
+                      </View>
+                    </View>
           <View style={[{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', width: "100%", gap: 10 }]}>
             <TouchableOpacity
               style={[styles.cancelButton, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}
               onPress={handleClose}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Bouton Annuler"
+              accessibilityHint="Appuyez pour annuler l'achat et fermer le formulaire"
             >
               <Text style={{ color: Colors[colorScheme ?? 'light'].headerText }}>Annuler</Text>
             </TouchableOpacity>
@@ -292,6 +375,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ visible, onClose, onPassG
                 },
               ]}
               onPress={handleSubmit}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Bouton Passer au paiement"
+              accessibilityHint={isFormComplete ? "Appuyez pour procéder au paiement" : "Remplissez tous les champs requis pour activer le bouton"}
             >
               <Text style={{
                 color: isFormComplete

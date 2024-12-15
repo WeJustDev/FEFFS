@@ -1,10 +1,12 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { View, Text, Image, StyleSheet, Pressable, ScrollView } from "react-native";
-import { useEffect, useState } from "react";
+import { View, Text, Image, StyleSheet, Pressable, ScrollView, AccessibilityInfo, findNodeHandle, TouchableOpacity } from "react-native";
+import { useEffect, useState, useCallback, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Collapsible } from "@/components/Collapsible";
+import { useFocusEffect } from "@react-navigation/native";
+
 
 export default function Event() {
   const colorScheme = useColorScheme();
@@ -107,6 +109,24 @@ export default function Event() {
     setNotification(true);
   };
 
+  const consultezRef = useRef<TouchableOpacity>(null);
+  
+    useFocusEffect(
+      useCallback(() => {
+        const setFocus = () => {
+          setTimeout(() => {
+            if (consultezRef.current) {
+              const nodeHandle = findNodeHandle(consultezRef.current);
+              if (nodeHandle) {
+                AccessibilityInfo.setAccessibilityFocus(nodeHandle);
+              }
+            }
+          }, 100);
+        };
+        setFocus();
+      }, [])
+    );
+
   return (
     <>
       {notification && (
@@ -197,6 +217,7 @@ export default function Event() {
           </View>
         </View>
       )}
+
       <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
         <View style={{
           flexDirection: "row",
@@ -207,6 +228,7 @@ export default function Event() {
             <Image
               style={styles.logo}
               source={require("@/assets/images/logo.png")}
+              accessibilityLabel="Application Logo"
             />
           </View>
           <View style={{ justifyContent: "center" }}>
@@ -215,6 +237,9 @@ export default function Event() {
                 styles.welcomeText,
                 { color: Colors[colorScheme ?? "light"].headerText },
               ]}
+              accessibilityRole="header"
+              accessibilityLabel="Consultez les évènements disponibles"
+              ref={consultezRef}
             >
               Consultez
             </Text>
@@ -223,6 +248,9 @@ export default function Event() {
                 styles.titleText,
                 { color: Colors[colorScheme ?? "light"].headerText },
               ]}
+              accessible={false}
+              accessibilityRole="header"
+              accessibilityLabel="Title Text"
             >
               Les évènements disponibles
             </Text>
@@ -234,46 +262,140 @@ export default function Event() {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           {eventsWithShowtimes.length > 0 ? (
             eventsWithShowtimes.map((event) => (
-              <View key={event._id} style={[styles.eventContainer, { borderBottomColor: Colors[colorScheme ?? 'light'].dateTagBg , }, { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
-                <Text style={[{ fontWeight: 'bold', fontSize: 20, textAlign: "center", marginBottom: 10 } , { color: Colors[colorScheme ?? 'light'].text }]}>
+              <View
+                key={event._id}
+                style={[
+                  styles.eventContainer,
+                  { borderBottomColor: Colors[colorScheme ?? 'light'].dateTagBg },
+                  { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }
+                ]}
+              
+                accessibilityLabel={`Évènement : ${event.title}`}
+              >
+                <Text
+                  style={[
+                    { fontWeight: 'bold', fontSize: 20, textAlign: "center", marginBottom: 10 },
+                    { color: Colors[colorScheme ?? 'light'].text }
+                  ]}
+                  accessibilityRole="header"
+                  accessibilityLabel={`Titre de l'évènement : ${event.title}`}
+                >
                   {event.title}
                 </Text>
                 <Image
                   source={require('@/assets/images/bandeau-1.png')}
                   style={{ width: '100%', height: 200, marginBottom: 10, borderColor: 'transparent' }}
+                  accessibilityLabel={`Image de la bannière pour ${event.title}`}
                 />
                 <View>
-                  <Text style={[{ fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5,  }, { color: Colors[colorScheme ?? 'light'].text }]}>Description :</Text>
-                  <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.description}</Text>
+                  <Text
+                    style={[
+                      { fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5 },
+                      { color: Colors[colorScheme ?? 'light'].text }
+                    ]}
+                    accessibilityRole="header"
+                    accessibilityLabel={`Description de l'évènement ${event.title}`}
+                  >
+                    Description :
+                  </Text>
+                  <Text
+                    style={{ color: Colors[colorScheme ?? 'light'].text }}
+                    accessibilityLabel={`Description complète : ${event.description}`}
+                  >
+                    {event.description}
+                  </Text>
                 </View>
                 <View>
-                  <Text style={[{ fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5,  }, { color: Colors[colorScheme ?? 'light'].text }]}>Durée :</Text>
-                  <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.duration} minutes</Text>
+                  <Text
+                    style={[
+                      { fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5 },
+                      { color: Colors[colorScheme ?? 'light'].text }
+                    ]}
+                    accessibilityRole="header"
+                    accessibilityLabel={`Durée de l'évènement ${event.title}`}
+                  >
+                    Durée :
+                  </Text>
+                  <Text
+                    style={{ color: Colors[colorScheme ?? 'light'].text }}
+                    accessibilityLabel={`Durée : ${event.duration} minutes`}
+                  >
+                    {event.duration} minutes
+                  </Text>
                 </View>
-                <Text style={[{ fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5,  }, { color: Colors[colorScheme ?? 'light'].text }]}>Séances :</Text>
+                <Text
+                  style={[
+                    { fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5 },
+                    { color: Colors[colorScheme ?? 'light'].text }
+                  ]}
+                  accessibilityRole="header"
+                  accessibilityLabel={`Séances de l'évènement ${event.title}`}
+                >
+                  Séances :
+                </Text>
                 {event.showtimes.length > 0 ? (
                   event.showtimes.map((showtime) => (
-                    <View key={showtime._id} style={[styles.showtimeContainer, { borderColor: Colors[colorScheme ?? 'light'].dateTagBg }]}>
-                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>
+                    <View
+                      key={showtime._id}
+                      style={[
+                        styles.showtimeContainer,
+                        { borderColor: Colors[colorScheme ?? 'light'].dateTagBg }
+                      ]}
+                     
+                      accessibilityLabel={`Séance le ${new Date(showtime.date).toLocaleDateString()} à ${showtime.localisation}`}
+                    >
+                      <Text
+                        style={[
+                          { fontWeight: 'bold' },
+                          { color: Colors[colorScheme ?? 'light'].text }
+                        ]}
+                        accessibilityLabel={`Date de la séance : ${new Date(showtime.date).toLocaleString()}`}
+                      >
                         Date : {new Date(showtime.date).toLocaleString()}
                       </Text>
-                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>
+                      <Text
+                        style={{ color: Colors[colorScheme ?? 'light'].text }}
+                        accessibilityLabel={`Lieu de la séance : ${showtime.localisation}`}
+                      >
                         Lieu: {showtime.localisation}
                       </Text>
-                      <Pressable onPress={() => handleAdd(showtime._id)} style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}>
-                        <Text style={[styles.buyButtonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
+                      <Pressable
+                        onPress={() => handleAdd(showtime._id)}
+                        style={[
+                          styles.addButton,
+                          { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }
+                        ]}
+                        accessibilityLabel={`Ajouter la séance à ${showtime.localisation} au planning`}
+                        accessibilityRole="button"
+                        accessibilityHint={`Ajoute la séance du ${new Date(showtime.date).toLocaleDateString()} à votre planning`}
+                      >
+                        <Text
+                          style={[
+                            styles.buyButtonText,
+                            { color: Colors[colorScheme ?? 'light'].dateTagText }
+                          ]}
+                        >
                           Ajouter au planning
                         </Text>
                       </Pressable>
                     </View>
                   ))
-                ) : 
-                  <Text style={ { color: Colors[colorScheme ?? 'light'].text }}>Aucune séance à afficher</Text>
-              }
+                ) : (
+                  <Text
+                    style={{ color: Colors[colorScheme ?? 'light'].text }}
+                    accessibilityLabel={`Aucune séance disponible pour l'évènement ${event.title}`}
+                  >
+                    Aucune séance à afficher
+                  </Text>
+                )}
               </View>
             ))
           ) : (
-            <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
+            <Text
+              style={{ color: Colors[colorScheme ?? "light"].text }}
+              accessibilityLabel="Aucun évènement disponible"
+              accessibilityRole="text"
+            >
               Aucun évènement disponible
             </Text>
           )}
