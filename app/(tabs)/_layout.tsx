@@ -37,7 +37,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="event"
         options={{
-          title: 'Programme',
+          title: 'Évènements',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="event-note" color={color} />,
         }}
       />

@@ -1,192 +1,110 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, FlatList, Button, View, Text, Pressable, ScrollView } from 'react-native';
-import { Image } from 'react-native';
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { View, Text, Image, StyleSheet, Pressable, ScrollView } from "react-native";
+import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Collapsible } from "@/components/Collapsible";
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-
-
-// Données des boutons de tri
-const buttons = [
-  {
-    id: "",
-    title: "Tout voir",
-  },
-  {
-    id: "1",
-    title: "Palmarès",
-  },
-  {
-    id: "2",
-    title: "Longs-métrages",
-  },
-  {
-    id: "3",
-    title: "Rétrospectives",
-  },
-];
-
-
-type Event = {
-  _id: string;
-  title: string;
-  description: string;
-  filename: string;
-  duration: string;
-  showtimes: { id: string; time: Date; localisation: string }[];
-  category: string;
-};
-
-export default function TabTwoScreen() {
-  const [events, setEvents] = useState<Event[]>([]);
-
-  const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
-  const [filteredEvents, setFilteredEvents] = useState(events);
-
-  // État de gestion des programmes
-  const [userProgramId, setUserProgramId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [hasError, setHasError] = useState<boolean>(false);
-  const [notification, setNotification] = useState<boolean>(false);
-
+export default function Event() {
   const colorScheme = useColorScheme();
 
+  const [eventsWithShowtimes, setEventsWithShowtimes] = useState<any[]>([]);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<boolean>(false);
 
   useEffect(() => {
-    fetch('https://feffs.elioooooo.fr/event/get')
-      .then(response => response.json())
-      .then(data => setEvents(data))
-      .then(() => console.log(events))   
-      .then(() => console.log(events[0] ? events[0].title : 'No data'));
+    const fetchEventsAndShowtimes = async () => {
+      try {
+        const eventsResponse = await fetch("https://feffs.elioooooo.fr/event/get/");
+        const eventsData = await eventsResponse.json();
+
+        const showtimesResponse = await fetch("https://feffs.elioooooo.fr/showtime/get/");
+        const showtimesData = await showtimesResponse.json();
+
+        // Combine et regroupe les showtimes selon leurs événements
+        const combinedData = eventsData.map((event: any) => {
+          return {
+            ...event,
+            showtimes: showtimesData.filter((showtime: any) => showtime.event === event._id),
+          };
+        });
+
+        setEventsWithShowtimes(combinedData);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données :", error);
+      }
+    };
+
+    fetchEventsAndShowtimes();
   }, []);
-
-
-  useEffect(() => {
-    if (!selectedButtonId) {
-      setFilteredEvents(events);
-    } else {
-      const filteredData = events.filter(event => event.category === selectedButtonId);
-      setFilteredEvents(filteredData);
-    }
-  }, [selectedButtonId, events]);
-
-  // Fonction de tri qui se déclenche à chaque fois que le bouton sélectionné change
-  useEffect(() => {
-    filterEvents();
-  }, [selectedButtonId, events]);
-
-  // Filtrer les événements en fonction de l'utilisateur sélectionné
-  const filterEvents = () => {
-    if (!selectedButtonId) {
-      setFilteredEvents(events); // Affiche tous les événements si aucun bouton n'est sélectionné
-      return;
-    }
-
-    const selectedButton = buttons.find(button => button.id === selectedButtonId);
-    if (!selectedButton) return;
-
-    const filteredData = events.filter(event => event.category === selectedButtonId);
-
-    setFilteredEvents(filteredData);
-  };
-
-  // Fonction de rendu des boutons de tri
-  const renderButton = ({ item }: { item: typeof buttons[0] }) => {
-    const isSelected = selectedButtonId === item.id;
-
-    return (
-      <Pressable
-        onPress={() => setSelectedButtonId(item.id)}
-        style={[
-          styles.filterButton,
-          {
-            backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg,
-            borderColor: isSelected ? Colors[colorScheme ?? 'light'].dateTagText : 'transparent',
-          }
-        ]}
-      >
-        <Text style={[
-          styles.filterButtonText,
-          { color: Colors[colorScheme ?? 'light'].dateTagText }
-        ]}>
-          {item.title}
-        </Text>
-      </Pressable>
-    );
-  };
-
-  // Fonction pour formater la date
-  const formatDate = (date: Date): string => {
-    const daysOfWeek = ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'];
-
-    const dayOfWeek = daysOfWeek[date.getDay()]; // Obtenir le jour de la semaine (0 = Dimanche)
-    const day = String(date.getDate()).padStart(2, '0'); // Obtenir le jour du mois (16) avec zéro devant
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Obtenir le mois (Septembre = 8 + 1)
-    const hours = String(date.getHours()).padStart(2, '0'); // Heures au format 24h
-    const minutes = String(date.getMinutes()).padStart(2, '0'); // Minutes
-
-    return `${dayOfWeek} ${day}.${month} ${hours}h${minutes}`;
-  };
-
 
   const handleAdd = async (eventId: string) => {
     try {
+      console.log("Add event to personal calendar...");
       const userEmail = await AsyncStorage.getItem("email");
       if (!userEmail) throw new Error("Vous devez être connecté pour ajouter un évènement à votre programme");
 
-      const userIdResponse = await fetch('https://feffs.elioooooo.fr/user/get/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail })
+      const userIdResponse = await fetch("https://feffs.elioooooo.fr/user/get/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: userEmail }),
       });
 
-      const { userId } = await userIdResponse.json();
+      const userIdData = await userIdResponse.json();
+      const userId = userIdData.userId;
 
-      const userProgramResponse = await fetch('https://feffs.elioooooo.fr/program/get/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
+      const userProgramResponse = await fetch("https://feffs.elioooooo.fr/program/get/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
       });
 
-      let programId = null;
+      let userProgramId;
       if (userProgramResponse.status === 200) {
-        const programData = await userProgramResponse.json();
-        programId = programData._id;
-      } else {
-        const newProgramResponse = await fetch('https://feffs.elioooooo.fr/program/add/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId })
+        const userProgramData = await userProgramResponse.json();
+        userProgramId = userProgramData._id;
+      } else if (userProgramResponse.status === 404) {
+        const newProgramResponse = await fetch("https://feffs.elioooooo.fr/program/add/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
         });
+
         const newProgramData = await newProgramResponse.json();
-        programId = newProgramData._id;
+        await AsyncStorage.setItem("program", JSON.stringify(newProgramData));
+        userProgramId = newProgramData._id;
       }
 
-      const addEventResponse = await fetch(`https://feffs.elioooooo.fr/program/add-event/${programId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: eventId })
-      });
+      if (userProgramId) {
+        const addEventResponse = await fetch(`https://feffs.elioooooo.fr/program/add-event/${userProgramId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ event: eventId }),
+        });
 
-      if (addEventResponse.status === 200) {
-        setError("Évènement ajouté au programme avec succès");
+        if (addEventResponse.status === 200) {
+          setError("Évènement ajouté au programme avec succès");
+        } else {
+          throw new Error("Erreur lors de l'ajout du programme");
+        }
       } else {
-        throw new Error("Erreur lors de l'ajout de l'évènement au programme");
+        throw new Error("Programme personnel introuvable");
       }
     } catch (error: any) {
       setError(error.message);
     }
     setHasError(true);
-    setNotification(true); // Activer la notification ici
   };
-
 
   return (
     <>
@@ -279,13 +197,11 @@ export default function TabTwoScreen() {
         </View>
       )}
       <View style={{ marginTop: 64, marginBottom: 36, paddingHorizontal: 20 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "flex-start",
+          alignItems: "center",
+        }}>
           <View style={styles.logoContainer}>
             <Image
               style={styles.logo}
@@ -307,61 +223,58 @@ export default function TabTwoScreen() {
                 { color: Colors[colorScheme ?? "light"].headerText },
               ]}
             >
-              Votre programme
+              Les évènements disponibles
             </Text>
           </View>
         </View>
       </View>
 
-      {/* boutton pour filtrer */}
-      <View style={{ height: 80, marginBottom: 20 }}>
-        <FlatList
-          data={buttons}
-          keyExtractor={(item) => item.id}
-          renderItem={renderButton}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[{ alignItems: 'center' }, ]} 
-        />
-      </View>
-
-      {/* Le contenu principal de la page */}
-      <View style={{ flex: 1, marginLeft: 10, marginRight:10 }}>
+      <View>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map(event => (
-              <View key={event._id} >
+          {eventsWithShowtimes.length > 0 ? (
+            eventsWithShowtimes.map((event) => (
+              <View key={event._id} style={[styles.eventContainer, { borderBottomColor: Colors[colorScheme ?? 'light'].dateTagBg , }, { backgroundColor: Colors[colorScheme ?? 'light'].cardDarkBg }]}>
+                <Text style={[{ fontWeight: 'bold', fontSize: 20, textAlign: "center", marginBottom: 10 } , { color: Colors[colorScheme ?? 'light'].text }]}>
+                  {event.title}
+                </Text>
                 <Image
                   source={require('@/assets/images/bandeau-1.png')}
                   style={{ width: '100%', height: 200, marginBottom: 10, borderColor: 'transparent' }}
                 />
-                <View style={styles.eventInfos}>
-                    <Collapsible title={event.title}>
-                    <View>
-                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Description</Text>
-                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.description}</Text>
-                    </View>
-                    <View>
-                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Durée : </Text>
-                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.duration} minutes</Text>
-                    </View>
-                    <View>
-                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>Séances</Text>
-                      {event.showtimes.length > 0 ? event.showtimes.map(showtime => (
-                        <Text key={showtime.id} style={{ color: Colors[colorScheme ?? 'light'].text }}>{formatDate(showtime.time)} - {showtime.localisation}</Text>
-                      )) : <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>Pas de séance prévue</Text>}
-                    </View>
-                  </Collapsible>
+                <View>
+                  <Text style={[{ fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5,  }, { color: Colors[colorScheme ?? 'light'].text }]}>Description :</Text>
+                  <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.description}</Text>
                 </View>
-                <Pressable onPress={() => handleAdd(event._id)} style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}>
-                  <Text style={[styles.buyButtonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
-                    Ajouter au planning
-                  </Text>
-                </Pressable>
+                <View>
+                  <Text style={[{ fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5,  }, { color: Colors[colorScheme ?? 'light'].text }]}>Durée :</Text>
+                  <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>{event.duration} minutes</Text>
+                </View>
+                <Text style={[{ fontWeight: 'bold', fontSize: 18, textAlign: "left", marginBottom: 5, marginTop: 5,  }, { color: Colors[colorScheme ?? 'light'].text }]}>Séances :</Text>
+                {event.showtimes.length > 0 ? (
+                  event.showtimes.map((showtime) => (
+                    <View key={showtime._id} style={[styles.showtimeContainer, { borderColor: Colors[colorScheme ?? 'light'].dateTagBg }]}>
+                      <Text style={[{ fontWeight: 'bold' }, { color: Colors[colorScheme ?? 'light'].text }]}>
+                        Date : {new Date(showtime.date).toLocaleString()}
+                      </Text>
+                      <Text style={{ color: Colors[colorScheme ?? 'light'].text }}>
+                        Lieu: {showtime.localisation}
+                      </Text>
+                      <Pressable onPress={() => handleAdd(showtime._id)} style={[styles.addButton, { backgroundColor: Colors[colorScheme ?? 'light'].dateTagBg }]}>
+                        <Text style={[styles.buyButtonText, { color: Colors[colorScheme ?? 'light'].dateTagText }]}>
+                          Ajouter au planning
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ))
+                ) : 
+                  <Text style={ { color: Colors[colorScheme ?? 'light'].text }}>Aucune séance à afficher</Text>
+              }
               </View>
             ))
           ) : (
-            <Text>Aucun événement ne correspond à votre profil.</Text>
+            <Text style={{ color: Colors[colorScheme ?? "light"].text }}>
+              Aucun évènement disponible
+            </Text>
           )}
         </ScrollView>
       </View>
@@ -410,6 +323,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingBottom: 10,
   },
+  button: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 5,
+    alignSelf: "center",
+    width: "auto",
+  },
   addButton: {
     backgroundColor: "transparent",
     padding: 10,
@@ -443,6 +365,25 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
-  }
+  },
+  eventContainer: {
+    marginBottom: 20,
+    borderBottomWidth: 3,
+    paddingBottom: 10,
+    marginRight: 10,
+    marginLeft: 10,
+    paddingTop: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderRadius: 8,
+  },
+  showtimeContainer: {
+    marginTop: 10,
+    paddingLeft: 10,
+    paddingBottom: 10,
+    paddingTop: 10,
+    paddingRight: 10,
+    borderWidth: 2,
+    borderRadius: 5,
+  },
 });
-
